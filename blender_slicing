@@ -1,0 +1,99 @@
+import bpy
+import addon_utils
+from pathlib import Path
+import math
+import mathutils
+
+# === CONFIGURATION ===
+DATA_ROOT = Path("/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split")
+OUTPUT_ROOT = Path("/home/user/lzhou/blender-5views")
+
+# === ENABLE OBJ SUPPORT ===
+addon_utils.enable("io_scene_obj")
+
+# === DEFINE CAMERA OFFSETS ===
+camera_views = {
+    "top":    (0, 0, 100),
+    "bottom": (0, 0, -100),
+    "front":  (0, -100, 0),
+    "left":   (-100, 0, 0),
+    "right":  (100, 0, 0),
+}
+
+# === FIND ALL OBJ FILES ===
+obj_files = sorted((DATA_ROOT / "upper").rglob("*.obj")) + \
+            sorted((DATA_ROOT / "lower").rglob("*.obj"))
+
+print(f" Found {len(obj_files)} OBJ files.")
+
+# === PROCESS EACH OBJ FILE ===
+for obj_path in obj_files:
+    print(f"\n Rendering {obj_path.name}...")
+
+    # Reset Blender scene
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+
+    # Import model
+    bpy.ops.import_scene.obj(filepath=str(obj_path), axis_forward='-Z', axis_up='Y')
+
+    # Add lights
+    bpy.ops.object.light_add(type='SUN', location=(0, 0, 100))
+    bpy.context.object.data.energy = 4
+    bpy.ops.object.light_add(type='SUN', location=(50, -50, 50))
+    bpy.context.object.data.energy = 2
+    bpy.ops.object.light_add(type='SUN', location=(-50, 50, 30))
+    bpy.context.object.data.energy = 1.5
+
+    # Render settings
+    bpy.context.scene.render.image_settings.file_format = 'PNG'
+    bpy.context.scene.render.resolution_x = 1024
+    bpy.context.scene.render.resolution_y = 1024
+
+    # Get mesh object & compute center
+    model = [o for o in bpy.context.scene.objects if o.type == 'MESH'][0]
+    bbox = [model.matrix_world @ mathutils.Vector(c) for c in model.bound_box]
+    center = sum(bbox, mathutils.Vector()) / 8.0
+
+    # Output path
+    rel = obj_path.relative_to(DATA_ROOT)
+    out_dir = OUTPUT_ROOT / rel.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Render each view
+    for view_name, offset in camera_views.items():
+        print(f"   View: {view_name}")
+
+        # Delete camera + target
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in bpy.context.scene.objects:
+            if o.type in ['CAMERA', 'EMPTY']:
+                o.select_set(True)
+        bpy.ops.object.delete()
+
+        # Add camera
+        cam_loc = center + mathutils.Vector(offset)
+        bpy.ops.object.camera_add(location=cam_loc)
+        cam = bpy.context.object
+        bpy.context.scene.camera = cam
+
+        # Add target (empty)
+        bpy.ops.object.empty_add(type='PLAIN_AXES', location=center)
+        target = bpy.context.object
+        con = cam.constraints.new(type='TRACK_TO')
+        con.target = target
+        con.track_axis = 'TRACK_NEGATIVE_Z'
+        con.up_axis = 'UP_Y'
+
+        # Ortho camera for clear flat view
+        cam.data.type = 'ORTHO'
+        cam.data.ortho_scale = 60
+
+        # Output file
+        out_file = out_dir / f"{obj_path.stem}_{view_name}.png"
+        bpy.context.scene.render.filepath = str(out_file)
+
+        # Render
+        bpy.ops.render.render(write_still=True)
+        print(f"     Saved: {out_file.name}")
+
+print("\n All views rendered for all models.")
