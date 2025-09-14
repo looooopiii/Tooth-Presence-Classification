@@ -7,8 +7,7 @@ import shutil
 import subprocess
 import os
 
-
-# 测试用的路径
+# Test paths
 TEST_OBJ_PATH = "blender-scripts/dataset/TeethSeg/3DTeethLand_challenge_train_test_split/lower/0AAQ6BO3/0AAQ6BO3_lower.obj"
 TEST_JSON_PATH = "blender-scripts/dataset/TeethSeg/3DTeethLand_challenge_train_test_split/lower/0AAQ6BO3/0AAQ6BO3_lower.json"
 TEST_CASE_ID = "0AAQ6BO3"
@@ -23,11 +22,11 @@ class TeethDataAugmentorTest:
 
     def get_tooth_labels_from_json(self, json_path):
         """
-        从 JSON 文件读取顶点标签，并创建牙齿到顶点索引的映射。
-        返回一个字典，键为牙齿编号，值为对应的顶点索引列表。
+        Reads vertex labels from a JSON file and creates a mapping from tooth IDs to vertex indices.
+        Returns a dictionary where keys are tooth names and values are lists of corresponding vertex indices.
         """
         if not os.path.exists(json_path):
-            print(f"错误: JSON 文件不存在 {json_path}")
+            print(f"Error: JSON file does not exist at {json_path}")
             return {}
 
         with open(json_path, 'r') as f:
@@ -35,38 +34,38 @@ class TeethDataAugmentorTest:
 
         labels = data.get("labels", [])
         if not labels:
-            print("警告: JSON 文件中没有找到 'labels' 数组。")
+            print("Warning: 'labels' array not found in JSON file.")
             return {}
 
         tooth_to_vertices = {}
         for i, label in enumerate(labels):
-            if label != 0:  # 0通常是背景或牙龈
+            if label != 0:  # 0 typically represents background or gingiva
                 tooth_name = f"tooth_{label}"
                 if tooth_name not in tooth_to_vertices:
                     tooth_to_vertices[tooth_name] = []
-                # 顶点索引从1开始
+                # Vertex indices in OBJ files are 1-based
                 tooth_to_vertices[tooth_name].append(i + 1)
 
-        print(f"从 JSON 文件中找到了 {len(tooth_to_vertices)} 颗牙齿的标签。")
+        print(f"Found labels for {len(tooth_to_vertices)} teeth from JSON file.")
         for name, vertices in tooth_to_vertices.items():
-            print(f"  {name}: {len(vertices)} 个顶点")
+            print(f"  {name}: {len(vertices)} vertices")
         return tooth_to_vertices
 
     def create_missing_teeth_variation(self, all_tooth_names):
-        """选择1到10颗牙齿进行移除"""
+        """Selects 1 to 10 teeth to remove."""
         if not all_tooth_names:
             return []
         num_to_remove = random.randint(1, min(len(all_tooth_names), 10))
         teeth_to_remove = random.sample(all_tooth_names, num_to_remove)
-        print(f"选择移除以下 {num_to_remove} 颗牙齿: {teeth_to_remove}")
+        print(f"Selecting the following {num_to_remove} teeth to remove: {teeth_to_remove}")
         return teeth_to_remove
 
     def modify_obj_by_labels(self, input_path, output_path, teeth_to_remove_names, tooth_labels):
-        """根据 JSON 标签精确移除牙齿"""
-        print(f"修改OBJ文件: {input_path} -> {output_path}")
+        """Removes teeth from the OBJ file based on JSON labels."""
+        print(f"Modifying OBJ file: {input_path} -> {output_path}")
         if not teeth_to_remove_names:
             shutil.copyfile(input_path, output_path)
-            print("没有牙齿需要移除，复制原始文件。")
+            print("No teeth selected for removal, copying original file.")
             return True
 
         vertices_to_remove = set()
@@ -75,7 +74,7 @@ class TeethDataAugmentorTest:
                 vertices_to_remove.update(tooth_labels[tooth_name])
 
         if not vertices_to_remove:
-            print("警告：没有找到对应的牙齿标签，未执行移除操作。")
+            print("Warning: No corresponding tooth labels found, no removal performed.")
             shutil.copyfile(input_path, output_path)
             return True
 
@@ -121,11 +120,11 @@ class TeethDataAugmentorTest:
         with open(output_path, 'w') as f:
             f.writelines(modified_lines)
 
-        print(f"成功移除了 {len(vertices_to_remove)} 个顶点。")
+        print(f"Successfully removed {len(vertices_to_remove)} vertices.")
         return True
 
     def create_blender_script(self, obj_path, output_image_path, debug=False):
-        """Blender脚本：动态调整相机并渲染"""
+        """Blender script: dynamically adjusts camera and renders."""
         abs_obj_path = os.path.abspath(obj_path)
         abs_output_path = os.path.abspath(output_image_path)
 
@@ -136,17 +135,17 @@ import math
 import os
 
 def render_model(obj_path, output_path):
-    print(f"开始渲染 {{obj_path}}")
+    print(f"Starting render for {{obj_path}}")
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
     bpy.ops.import_scene.obj(filepath=obj_path)
 
     imported_objects = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
     if not imported_objects:
-        print("错误: 没有导入到任何网格！")
+        print("Error: No meshes imported!")
         return False
 
-    # 调整包围盒和居中
+    # Adjust bounding box and center
     min_coords = [float('inf')]*3
     max_coords = [float('-inf')]*3
     for obj in imported_objects:
@@ -166,10 +165,11 @@ def render_model(obj_path, output_path):
     for obj in imported_objects:
         obj.location -= bbox_center
 
-    # 相机设置
+    # Camera setup
     cam_distance = max_dim * 1.5
     cam_angle_azimuth = math.radians(-45)
-    cam_angle_elevation = math.radians(0)
+    cam_angle_elevation = math.radians(60)
+
     cx = cam_distance * math.cos(cam_angle_elevation) * math.cos(cam_angle_azimuth)
     cy = cam_distance * math.cos(cam_angle_elevation) * math.sin(cam_angle_azimuth)
     cz = cam_distance * math.sin(cam_angle_elevation)
@@ -180,12 +180,12 @@ def render_model(obj_path, output_path):
     cam.rotation_mode = 'QUATERNION'
     cam.rotation_quaternion = direction.to_track_quat('-Z', 'Y')
 
-    # 灯光
+    # Lighting
     bpy.ops.object.light_add(type='SUN', location=(10, 10, 10))
     light = bpy.context.object
     light.data.energy = 10
 
-    # 渲染设置
+    # Render settings
     scene = bpy.context.scene
     scene.render.resolution_x = 1024
     scene.render.resolution_y = 1024
@@ -194,12 +194,19 @@ def render_model(obj_path, output_path):
     scene.render.engine = 'CYCLES'
     scene.cycles.samples = 128
 
-    # ✅ 增强对比度：使用Filmic对比
+    # Enhance contrast: use Filmic color management
     scene.view_settings.view_transform = 'Filmic'
     scene.view_settings.look = 'High Contrast'
+    
+    # Set background color
+    world = bpy.context.scene.world
+    if world and world.use_nodes:
+        bg = world.node_tree.nodes.get('Background')
+        if bg:
+            bg.inputs[0].default_value = (1, 1, 1, 1)
 
     bpy.ops.render.render(write_still=True)
-    print(f"渲染完成: {{output_path}}")
+    print(f"Render complete: {{output_path}}")
     return True
 
 render_model("{abs_obj_path}", "{abs_output_path}")
@@ -212,42 +219,42 @@ render_model("{abs_obj_path}", "{abs_output_path}")
         with open(script_path, 'w') as f:
             f.write(self.create_blender_script(obj_path, output_image_path))
         cmd = ["blender", "--background", "--python", str(script_path)]
-        print(f"执行命令: {' '.join(cmd)}")
+        print(f"Executing command: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
-            print(f"渲染完成: {output_image_path}")
+            print(f"Render complete: {output_image_path}")
             return True
         else:
-            print(f"渲染失败。错误输出:")
+            print(f"Render failed. Error output:")
             print(result.stderr)
             return False
 
     def run_test(self):
-        print("开始测试...")
+        print("Starting test...")
 
-        # 步骤1: 渲染原始模型
-        print("\n--- 渲染原始模型 ---")
+        # Step 1: Render original model
+        print("\n--- Rendering original model ---")
         self.render_with_blender(TEST_OBJ_PATH, str(TEST_OUTPUT_DIR / "images" / f"{TEST_CASE_ID}_original.png"))
 
-        # 步骤2: 从 JSON 文件中读取牙齿标签
-        print("\n--- 从JSON文件读取牙齿标签 ---")
+        # Step 2: Read tooth labels from JSON file
+        print("\n--- Reading tooth labels from JSON file ---")
         tooth_labels = self.get_tooth_labels_from_json(TEST_JSON_PATH)
         all_tooth_names = list(tooth_labels.keys())
 
-        # 步骤3: 选择要移除的牙齿
+        # Step 3: Select teeth to remove
         teeth_to_remove = self.create_missing_teeth_variation(all_tooth_names)
 
-        # 步骤4: 修改OBJ并渲染
+        # Step 4: Modify OBJ and render
         if teeth_to_remove:
             modified_obj_path = TEST_OUTPUT_DIR / "obj" / f"{TEST_CASE_ID}_missing.obj"
             self.modify_obj_by_labels(TEST_OBJ_PATH, modified_obj_path, teeth_to_remove, tooth_labels)
 
-            print("\n--- 渲染修改后的模型 ---")
+            print("\n--- Rendering modified model ---")
             self.render_with_blender(modified_obj_path, str(TEST_OUTPUT_DIR / "images" / f"{TEST_CASE_ID}_missing.png"))
         else:
-            print("没有牙齿被选中移除，跳过修改和渲染。")
+            print("No teeth selected for removal, skipping modification and render.")
 
-        print("\n测试完成。")
+        print("\nTest complete.")
 
 
 def main():
