@@ -1,0 +1,419 @@
+# testing file for baseline_modelpy
+# labels are default 0 for missing teeth and 1 for present teeth
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from tqdm import tqdm
+import json
+import trimesh
+import random
+from collections import OrderedDict
+
+# Plotting and metrics libraries
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Use a non-interactive backend for servers
+import seaborn as sns
+
+# Scikit-learn for metrics and alignment
+from sklearn.metrics import (
+    precision_recall_fscore_support,
+    accuracy_score,
+    confusion_matrix,
+    precision_recall_curve,
+    average_precision_score
+)
+from sklearn.decomposition import PCA
+
+
+# =================================================================================
+# CONFIGURATION
+# =================================================================================
+TEST_PLY_DIR = "/home/user/tbrighton/blender_outputs/parsed_ply"
+TEST_LABELS_CSV = "/home/user/tbrighton/Scripts/Testing/3D/label_processed.csv"
+MODEL_PATH = "/home/user/tbrighton/Scripts/Training/3D/trained_models/best_model_f1.pth"
+OUTPUT_DIR = "/home/user/tbrighton/Scripts/Testing/3D/test_results"
+Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+
+NUM_POINTS = 4096
+NUM_TEETH = 32
+NUM_SAMPLE_PREDICTIONS = 5  # How many random samples to print in the terminal
+
+# --- FDI Notation Mapping (Must be identical to the training script) ---
+VALID_FDI_LABELS = sorted([
+    18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28,
+    38, 37, 36, 35, 34, 33, 32, 31, 41, 42, 43, 44, 45, 46, 47, 48
+])
+FDI_TO_INDEX = {fdi_label: i for i, fdi_label in enumerate(VALID_FDI_LABELS)}
+INDEX_TO_FDI = {i: fdi_label for fdi_label, i in FDI_TO_INDEX.items()}
+
+
+# =================================================================================
+# MODEL DEFINITION (Must be identical to the training script)
+# =================================================================================
+
+class PointNetEncoder(nn.Module):
+    """ The feature extraction part of the PointNet model."""
+    def __init__(self, input_dim=3, feature_dim=1024):
+        super().__init__()
+        self.conv1 = nn.Conv1d(input_dim, 64, 1)
+        self.conv2 = nn.Conv1d(64, 128, 1)
+        self.conv3 = nn.Conv1d(128, 256, 1)
+        self.conv4 = nn.Conv1d(256, 512, 1)
+        self.conv5 = nn.Conv1d(512, feature_dim, 1)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(256)
+        self.bn4 = nn.BatchNorm1d(512)
+        self.bn5 = nn.BatchNorm1d(feature_dim)
+
+    def forward(self, x):
+        x = x.transpose(2, 1)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x)))
+        x = torch.max(x, 2)[0]  # Global max pooling
+        return x
+
+class ToothClassificationModel(nn.Module):
+    """ The full PointNet-based classification model."""
+    def __init__(self, num_teeth=32, feature_dim=1024):
+        super().__init__()
+        self.encoder = PointNetEncoder(input_dim=3, feature_dim=feature_dim)
+        self.fc1 = nn.Linear(feature_dim, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, num_teeth)
+        self.bn1 = nn.BatchNorm1d(512)
+        self.bn2 = nn.BatchNorm1d(256)
+        self.dropout1 = nn.Dropout(0.3)
+        self.dropout2 = nn.Dropout(0.3)
+    
+    def forward(self, x):
+        features = self.encoder(x)
+        x = self.dropout1(F.relu(self.bn1(self.fc1(features))))
+        x = self.dropout2(F.relu(self.bn2(self.fc2(x))))
+        return self.fc3(x)
+
+
+# =================================================================================
+# DATA PREPROCESSING AND LOADING
+# =================================================================================
+
+def align_point_cloud_robust(points):
+    """
+    Aligns a point cloud to a deterministic canonical orientation using PCA
+    and heuristics based on the dental arch shape.
+    """
+    if len(points) < 10:
+        return points
+
+    centroid = np.mean(points, axis=0)
+    points_centered = points - centroid
+
+    pca = PCA(n_components=3)
+    pca.fit(points_centered)
+    components = pca.components_
+
+    z_axis = components[2]
+    if np.mean(((points_centered @ z_axis) ** 3)) > 0:
+        z_axis *= -1
+
+    y_axis = components[1]
+    proj_y = points_centered @ y_axis
+    if np.mean(proj_y[proj_y > np.quantile(proj_y, 0.9)]) < 0:
+        y_axis *= -1
+        
+    x_axis = np.cross(y_axis, z_axis)
+    
+    rotation_matrix = np.stack([x_axis, y_axis, z_axis], axis=0)
+    aligned_points = points_centered @ rotation_matrix.T
+    
+    return aligned_points
+
+def load_ply_file(ply_path):
+    """ Safely loads vertices from a .ply file using trimesh."""
+    try:
+        mesh = trimesh.load(ply_path, process=False)
+        return np.array(mesh.vertices, dtype=np.float32)
+    except Exception as e:
+        print(f"❌ Error loading {ply_path}: {e}")
+        return np.array([], dtype=np.float32)
+
+def normalize_point_cloud(points):
+    """ Normalizes a point cloud to fit within a unit sphere centered at the origin."""
+    if len(points) == 0:
+        return points
+    centroid = np.mean(points, axis=0)
+    points = points - centroid
+    max_dist = np.max(np.sqrt(np.sum(points**2, axis=1)))
+    if max_dist > 0:
+        points = points / max_dist
+    return points
+
+def sample_points(points, num_points):
+    """ Samples a fixed number of points from a point cloud, with replacement if necessary."""
+    if len(points) == 0:
+        return np.zeros((num_points, 3), dtype=np.float32)
+    num_vertices = len(points)
+    replace = num_vertices < num_points
+    indices = np.random.choice(num_vertices, num_points, replace=replace)
+    return points[indices]
+
+def load_test_labels(csv_path):
+    """ Loads ground truth labels from the CSV file and converts them to the correct vector format."""
+    df = pd.read_csv(csv_path)
+    df['new_id'] = df['new_id'].astype(str).str.strip()
+    labels_dict = {}
+    for _, row in df.iterrows():
+        case_id = row['new_id']
+        label_vector = np.zeros(NUM_TEETH, dtype=np.float32)
+        for tooth_fdi in VALID_FDI_LABELS:
+            tooth_str = str(tooth_fdi)
+            if tooth_str in df.columns and pd.notna(row[tooth_str]) and row[tooth_str] == 1:
+                index = FDI_TO_INDEX[tooth_fdi]
+                label_vector[index] = 1.0
+        labels_dict[case_id] = label_vector
+    return labels_dict
+
+
+# =================================================================================
+# INFERENCE AND METRICS
+# =================================================================================
+
+def test_model(model, test_data, device):
+    """ Runs inference on the prepared test data and returns predictions."""
+    model.eval()
+    all_preds, all_targets, all_ids = [], [], []
+    with torch.no_grad():
+        for case_id, points, labels in tqdm(test_data, desc="Testing"):
+            points_tensor = torch.from_numpy(points).unsqueeze(0).float().to(device)
+            logits = model(points_tensor)
+            probs = torch.sigmoid(logits)
+            all_preds.append(probs.cpu().numpy()[0])
+            all_targets.append(labels)
+            all_ids.append(case_id)
+    return np.array(all_preds), np.array(all_targets), all_ids
+
+def calculate_metrics(preds, targets):
+    """ Calculates overall (micro), macro-averaged, and per-tooth metrics."""
+    if len(preds) == 0:
+        return {}
+    
+    preds_bin = (preds > 0.5).astype(int)
+    targets_bin = targets.astype(int)
+    flat_preds, flat_targets = preds_bin.flatten(), targets_bin.flatten()
+
+    # Overall (micro) metrics
+    p, r, f1, _ = precision_recall_fscore_support(flat_targets, flat_preds, average='binary', zero_division=0)
+    acc = accuracy_score(flat_targets, flat_preds)
+
+    # Per-tooth metrics
+    per_tooth = OrderedDict()
+    for idx in range(NUM_TEETH):
+        fdi_label = INDEX_TO_FDI[idx]
+        p_t, r_t, f1_t, _ = precision_recall_fscore_support(targets_bin[:, idx], preds_bin[:, idx], average='binary', zero_division=0)
+        acc_t = accuracy_score(targets_bin[:, idx], preds_bin[:, idx])
+        support = int(targets_bin[:, idx].sum())
+        per_tooth[fdi_label] = {'precision': float(p_t), 'recall': float(r_t), 'f1': float(f1_t), 'accuracy': float(acc_t), 'support': support}
+
+    # Macro metrics
+    macro_p = np.mean([m['precision'] for m in per_tooth.values()])
+    macro_r = np.mean([m['recall'] for m in per_tooth.values()])
+    macro_f1 = np.mean([m['f1'] for m in per_tooth.values()])
+    macro_acc = np.mean([m['accuracy'] for m in per_tooth.values()])
+
+    return {
+        'overall_micro': {'precision': float(p), 'recall': float(r), 'f1': float(f1), 'accuracy': float(acc)},
+        'overall_macro': {'macro_precision': macro_p, 'macro_recall': macro_r, 'macro_f1': macro_f1, 'macro_accuracy': macro_acc},
+        'per_tooth': per_tooth
+    }
+
+# =================================================================================
+# REPORTING AND VISUALIZATION
+# =================================================================================
+
+def print_metrics_summary(metrics):
+    """ Prints a formatted summary of all calculated test metrics to the terminal."""
+    print("\n" + "="*80 + "\n" + " "*25 + "TESTING METRICS SUMMARY" + "\n" + "="*80)
+    micro = metrics['overall_micro']
+    print("\n📊 OVERALL (MICRO-AVERAGE) METRICS:")
+    print(f"  - Precision: {micro['precision']:.4f}\n  - Recall:    {micro['recall']:.4f}\n  - F1 Score:  {micro['f1']:.4f}\n  - Accuracy:  {micro['accuracy']:.4f}")
+    
+    macro = metrics['overall_macro']
+    print("\n📈 OVERALL (MACRO-AVERAGE) METRICS:")
+    print(f"  - Macro Precision: {macro['macro_precision']:.4f}\n  - Macro Recall:    {macro['macro_recall']:.4f}\n  - Macro F1 Score:  {macro['macro_f1']:.4f}\n  - Macro Accuracy:  {macro['macro_accuracy']:.4f}")
+    
+    print("\n🦷 PER-TOOTH METRICS (FDI Notation):")
+    print("-" * 80)
+    print(f"{'FDI Tooth':<12} {'Precision':<12} {'Recall':<12} {'F1':<12} {'Accuracy':<12} {'Support':<10}")
+    print("-" * 80)
+    for fdi_label, tooth_metrics in metrics['per_tooth'].items():
+        print(f"Tooth {fdi_label:<5} {tooth_metrics['precision']:>10.4f}   {tooth_metrics['recall']:>10.4f}   {tooth_metrics['f1']:>10.4f}   {tooth_metrics['accuracy']:>10.4f}   {tooth_metrics['support']:>8}")
+    print("=" * 80)
+
+def print_sample_predictions(ids, preds, targets, num_samples):
+    """ Prints a readable comparison of ground truth vs. predictions for random samples."""
+    print("\n" + "="*80 + "\n" + " "*28 + "SAMPLE PREDICTIONS" + "\n" + "="*80)
+    if len(ids) < num_samples:
+        num_samples = len(ids)
+    
+    sample_indices = random.sample(range(len(ids)), num_samples)
+    for i in sample_indices:
+        case_id = ids[i]
+        target_labels = targets[i]
+        pred_labels = (preds[i] > 0.5).astype(int)
+        
+        truth_set = {INDEX_TO_FDI[j] for j, label in enumerate(target_labels) if label == 1}
+        pred_set = {INDEX_TO_FDI[j] for j, label in enumerate(pred_labels) if label == 1}
+        
+        correctly_predicted = sorted(list(truth_set.intersection(pred_set)))
+        missed_teeth = sorted(list(truth_set.difference(pred_set)))
+        wrongly_predicted = sorted(list(pred_set.difference(truth_set)))
+        
+        print(f"\n📁 Case ID: {case_id}\n" + "-"*40)
+        print(f"  - Ground Truth Teeth: {sorted(list(truth_set))}")
+        print(f"  - Predicted Teeth:    {sorted(list(pred_set))}")
+        print("-" * 40)
+        print(f"  - ✅ Correctly Predicted: {correctly_predicted or 'None'}")
+        print(f"  - ❌ Missed Teeth (FN):     {missed_teeth or 'None'}")
+        print(f"  - ⚠️ Wrongly Predicted (FP): {wrongly_predicted or 'None'}")
+    print("\n" + "="*80)
+
+def generate_test_plots(metrics, preds, targets, save_dir):
+    """ Generates and saves a collection of plots summarizing test performance."""
+    # 1. Per-Tooth Performance Bar Chart
+    per_tooth_metrics = metrics['per_tooth']
+    fdi_labels = [str(label) for label in per_tooth_metrics.keys()]
+    f1_scores = [m['f1'] for m in per_tooth_metrics.values()]
+    precision_scores = [m['precision'] for m in per_tooth_metrics.values()]
+    recall_scores = [m['recall'] for m in per_tooth_metrics.values()]
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(figsize=(20, 10))
+    x = np.arange(len(fdi_labels))
+    width = 0.25
+    
+    ax.bar(x - width, precision_scores, width, label='Precision', color='royalblue')
+    ax.bar(x, recall_scores, width, label='Recall', color='limegreen')
+    rects3 = ax.bar(x + width, f1_scores, width, label='F1 Score', color='tomato')
+
+    ax.set_ylabel('Scores', fontsize=14)
+    ax.set_title('Per-Tooth Performance Metrics on Test Set', fontsize=18, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(fdi_labels, rotation=45, ha='right')
+    ax.legend(fontsize=12)
+    ax.set_ylim(0, 1.05)
+    ax.bar_label(rects3, padding=3, fmt='%.2f', fontsize=8)
+    fig.tight_layout()
+    plot_path = Path(save_dir) / "per_tooth_metrics.png"
+    plt.savefig(plot_path, dpi=300); plt.close()
+    print(f"✓ Per-tooth metrics plot saved to {plot_path}")
+
+    # 2. Overall Confusion Matrix
+    flat_targets = targets.flatten()
+    flat_preds = (preds > 0.5).astype(int).flatten()
+    cm = confusion_matrix(flat_targets, flat_preds)
+    
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Predicted Absent', 'Predicted Present'], yticklabels=['Actual Absent', 'Actual Present'])
+    plt.title('Overall Confusion Matrix (All Teeth)', fontsize=16, fontweight='bold'); plt.ylabel('Ground Truth'); plt.xlabel('Prediction')
+    plot_path = Path(save_dir) / "confusion_matrix.png"; plt.savefig(plot_path, dpi=300); plt.close()
+    print(f"✓ Confusion matrix plot saved to {plot_path}")
+    
+    # 3. Overall Precision-Recall Curve
+    precision, recall, _ = precision_recall_curve(flat_targets, preds.flatten())
+    avg_precision = average_precision_score(flat_targets, preds.flatten())
+
+    plt.figure(figsize=(10, 7))
+    plt.plot(recall, precision, color='darkorange', lw=2, label=f'PR Curve (Average Precision = {avg_precision:.2f})')
+    plt.xlim([0.0, 1.0]); plt.ylim([0.0, 1.05]); plt.xlabel('Recall'); plt.ylabel('Precision')
+    plt.title('Overall Precision-Recall Curve', fontsize=16, fontweight='bold')
+    plt.legend(loc="lower left"); plt.grid(True, alpha=0.5)
+    plot_path = Path(save_dir) / "precision_recall_curve.png"; plt.savefig(plot_path, dpi=300); plt.close()
+    print(f"✓ Precision-Recall curve saved to {plot_path}")
+
+
+# =================================================================================
+# MAIN EXECUTION
+# =================================================================================
+
+def main():
+    """ Orchestrates the entire testing pipeline."""
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # --- Load Model ---
+    model = ToothClassificationModel(num_teeth=NUM_TEETH).to(device)
+    checkpoint = torch.load(MODEL_PATH, map_location=device)
+    state_dict = checkpoint.get('model_state_dict', checkpoint)
+    if list(state_dict.keys())[0].startswith('module.'):
+        state_dict = {k[7:]: v for k, v in state_dict.items()}
+    model.load_state_dict(state_dict)
+    print(f"✅ Model loaded from {MODEL_PATH}")
+
+    # --- Load Labels ---
+    labels_dict = load_test_labels(TEST_LABELS_CSV)
+    print(f"✅ Loaded labels for {len(labels_dict)} cases from {TEST_LABELS_CSV}")
+    
+    # --- Prepare Data with Jaw-Specific Alignment ---
+    test_data = []
+    ply_files = sorted(Path(TEST_PLY_DIR).glob("*.ply"))
+    print(f"Found {len(ply_files)} PLY files in {TEST_PLY_DIR}")
+    
+    for ply_file in ply_files:
+        case_id = ply_file.stem
+        if case_id in labels_dict:
+            points = load_ply_file(ply_file)
+            if len(points) > 0:
+                aligned_points = align_point_cloud_robust(points)
+                
+                if "lower" in case_id.lower():
+                    aligned_points[:, 1] *= -1
+                    aligned_points[:, 2] *= -1
+                
+                points = normalize_point_cloud(aligned_points)
+                points = sample_points(points, NUM_POINTS)
+                labels = labels_dict[case_id]
+                test_data.append((case_id, points, labels))
+    
+    print(f"✅ Prepared {len(test_data)} matching samples for testing.")
+    if not test_data:
+        print("❌ No matching samples found. Exiting.")
+        return
+
+    # --- Run Inference ---
+    preds, targets, ids = test_model(model, test_data, device)
+    print(f"✅ Inference complete on {len(ids)} samples.")
+    
+    # --- Calculate and Report Metrics ---
+    metrics = calculate_metrics(preds, targets)
+    print_metrics_summary(metrics)
+    print_sample_predictions(ids, preds, targets, num_samples=NUM_SAMPLE_PREDICTIONS)
+    
+    # --- Generate and Save Plots ---
+    print("\n" + "="*80 + "\n" + " "*28 + "GENERATING PLOTS" + "\n" + "="*80)
+    generate_test_plots(metrics, preds, targets, OUTPUT_DIR)
+    
+    # --- Save Raw Predictions ---
+    results = pd.DataFrame({'case_id': ids})
+    for fdi_label in VALID_FDI_LABELS:
+        idx = FDI_TO_INDEX[fdi_label]
+        results[f'true_{fdi_label}'] = targets[:, idx].astype(int)
+        results[f'pred_{fdi_label}'] = (preds[:, idx] > 0.5).astype(int)
+        results[f'prob_{fdi_label}'] = preds[:, idx]
+    results.to_csv(Path(OUTPUT_DIR) / 'test_predictions.csv', index=False)
+    
+    with open(Path(OUTPUT_DIR) / 'test_metrics.json', 'w') as f:
+        json.dump(metrics, f, indent=4)
+        
+    print(f"\n📊 Full results and metrics saved successfully to {OUTPUT_DIR}")
+
+
+if __name__ == "__main__":
+    main()
