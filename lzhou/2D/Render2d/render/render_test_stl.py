@@ -114,7 +114,7 @@ addon_utils.enable("io_mesh_stl")
 
 # =========== UNIFIED RENDER SETTINGS ===========
 def setup_render_settings():
-    """统一的渲染设置 - 与 Render_test.py 完全一致"""
+    """general render settings - consistent with Render_test.py"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
@@ -132,7 +132,7 @@ def setup_render_settings():
         pass
     
     scene.cycles.device = 'GPU'
-    scene.cycles.samples = 512  # 统一高质量采样
+    scene.cycles.samples = 512  # unified high-quality sampling
     scene.cycles.use_adaptive_sampling = True
     
     try:
@@ -140,14 +140,14 @@ def setup_render_settings():
     except Exception:
         pass
 
-    # 统一分辨率
+    # unified resolution
     scene.render.resolution_x = 2048
     scene.render.resolution_y = 2048
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.film_transparent = False
 
-    # 统一黑色背景
+    # unified black background
     if scene.world is None:
         scene.world = bpy.data.worlds.new("SceneWorld")
     scene.world.use_nodes = True
@@ -158,7 +158,7 @@ def setup_render_settings():
     wout = nt.nodes.new('ShaderNodeOutputWorld')
     nt.links.new(bg.outputs['Background'], wout.inputs['Surface'])
 
-    # 统一色调映射
+    # unified color mapping
     scene.view_settings.view_transform = 'Filmic'
     scene.view_settings.look = 'High Contrast'
     scene.view_settings.exposure = 1.5
@@ -169,7 +169,7 @@ def setup_render_settings():
 
 # =========== UNIFIED LIGHTING ===========
 def setup_lighting(center, target):
-    """统一的光照设置 - 与 Render_test.py 完全一致"""
+    """unified lighting settings, consistent with Render_test.py"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type == 'LIGHT':
@@ -193,7 +193,7 @@ def setup_lighting(center, target):
         c.up_axis = 'UP_Y'
         return L
 
-    # 统一的光照配置
+    # unified lighting settings
     add_tracked_light('SPOT', (center.x, center.y - 150, center.z + 220), energy=250000, spot_deg=55)
     add_tracked_light('AREA', (center.x - 260, center.y - 200, center.z + 190), energy=85000, size=420)
     add_tracked_light('AREA', (center.x + 260, center.y + 200, center.z + 190), energy=85000, size=420)
@@ -204,7 +204,7 @@ def setup_lighting(center, target):
 
 # =========== UNIFIED MATERIAL ===========
 def create_tooth_material():
-    """统一的牙齿材质 - 与 Render_test.py 完全一致"""
+    """unified tooth material"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -356,7 +356,7 @@ def auto_flip_for_top_view(model, jaw_type: str):
 
 # =========== UNIFIED MODEL PREP ===========
 def prepare_model(model, jaw_type: str):
-    """统一的模型准备流程 - 与 Render_test.py 完全一致"""
+    """unified model preparation"""
     # Material
     tooth_mat = create_tooth_material()
     if model.data.materials:
@@ -409,7 +409,7 @@ def prepare_model(model, jaw_type: str):
 
 # =========== UNIFIED CAMERA ===========
 def setup_camera(model, margin=1.1):
-    """统一的正交相机设置 - 与 Render_test.py 完全一致"""
+    """unified orthographic camera setup"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type in {'CAMERA', 'EMPTY'}:

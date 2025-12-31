@@ -26,7 +26,7 @@ BASE_DIR = Path("/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_
 OUTPUT_DIR = Path("/home/user/lzhou/week15/render_output/train")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# 仅渲染单一正视图,不需要多角度
+# only top view for trainset
 ROTATION_ANGLES_DEG = [0]
 
 # === ENABLE OBJ IMPORT ADDON ===
@@ -35,7 +35,7 @@ addon_utils.enable("io_scene_obj")
 
 # =========== UNIFIED RENDER SETTINGS ===========
 def setup_render_settings():
-    """统一的渲染设置 - 与 Render_test.py 完全一致"""
+    """general render settings"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
@@ -53,7 +53,7 @@ def setup_render_settings():
         pass
     
     scene.cycles.device = 'GPU'
-    scene.cycles.samples = 512  # 统一高质量采样
+    scene.cycles.samples = 512  # unified sample count
     scene.cycles.use_adaptive_sampling = True
     
     try:
@@ -61,14 +61,14 @@ def setup_render_settings():
     except Exception:
         pass
 
-    # 统一分辨率
+    # unified resolution
     scene.render.resolution_x = 2048
     scene.render.resolution_y = 2048
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.film_transparent = False
 
-    # 统一黑色背景
+    # unified black background
     if scene.world is None:
         scene.world = bpy.data.worlds.new("SceneWorld")
     scene.world.use_nodes = True
@@ -79,7 +79,7 @@ def setup_render_settings():
     wout = nt.nodes.new('ShaderNodeOutputWorld')
     nt.links.new(bg.outputs['Background'], wout.inputs['Surface'])
 
-    # 统一色调映射
+    # unified color mapping
     scene.view_settings.view_transform = 'Filmic'
     scene.view_settings.look = 'High Contrast'
     scene.view_settings.exposure = 1.5
@@ -90,7 +90,7 @@ def setup_render_settings():
 
 # =========== UNIFIED LIGHTING ===========
 def setup_lighting(center, target):
-    """统一的光照设置 - 与 Render_test.py 完全一致"""
+    """unified lighting settings"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type == 'LIGHT':
@@ -114,7 +114,7 @@ def setup_lighting(center, target):
         c.up_axis = 'UP_Y'
         return L
 
-    # 统一的光照配置
+    # unified lighting settings
     add_tracked_light('SPOT', (center.x, center.y - 150, center.z + 220), energy=250000, spot_deg=55)
     add_tracked_light('AREA', (center.x - 260, center.y - 200, center.z + 190), energy=85000, size=420)
     add_tracked_light('AREA', (center.x + 260, center.y + 200, center.z + 190), energy=85000, size=420)
@@ -125,7 +125,7 @@ def setup_lighting(center, target):
 
 # =========== UNIFIED MATERIAL ===========
 def create_tooth_material():
-    """统一的牙齿材质 - 与 Render_test.py 完全一致"""
+    """unified tooth material"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -160,7 +160,7 @@ def create_tooth_material():
 
 # =========== ORIENTATION HELPERS ===========
 def orient_top_view(model):
-    """基础的顶视图定向"""
+    """basic top view orientation"""
     dims = model.dimensions
     xyz = [dims.x, dims.y, dims.z]
     min_idx = xyz.index(min(xyz))
@@ -190,7 +190,7 @@ def orient_top_view(model):
 
 
 def upright_with_pca(model):
-    """PCA稳定化定向"""
+    """PCA-based upright orientation"""
     if not HAS_NUMPY:
         return
 
@@ -235,7 +235,7 @@ def upright_with_pca(model):
 
 
 def auto_flip_for_top_view(model, jaw_type: str):
-    """确保咬合面朝向+Z"""
+    """Ensure the occlusal surface faces +Z"""
     bpy.context.view_layer.update()
     dims = model.dimensions
     if dims.y > dims.x:
@@ -280,7 +280,7 @@ def auto_flip_for_top_view(model, jaw_type: str):
 
 # =========== UNIFIED MODEL PREP ===========
 def prepare_model(model, jaw_type: str):
-    """统一的模型准备流程 - 与 Render_test.py 完全一致"""
+    """unified model preparation"""
     # Material
     tooth_mat = create_tooth_material()
     if model.data.materials:
@@ -333,7 +333,7 @@ def prepare_model(model, jaw_type: str):
 
 # =========== UNIFIED CAMERA ===========
 def setup_camera(model, margin=1.1):
-    """统一的正交相机设置 - 与 Render_test.py 完全一致"""
+    """unified orthographic camera setup"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type in {'CAMERA', 'EMPTY'}:
@@ -371,20 +371,20 @@ def setup_camera(model, margin=1.1):
 def validate_obj_import(obj_file):
     """Validate OBJ file import and mesh quality"""
     if not bpy.context.selected_objects:
-        print(f"❌ Failed to import: {obj_file}")
+        print(f" Failed to import: {obj_file}")
         return None
     
     meshes = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
     if not meshes:
-        print(f"❌ No mesh found in: {obj_file}")
+        print(f" No mesh found in: {obj_file}")
         return None
     
     model = meshes[0]
     if len(model.data.vertices) == 0:
-        print(f"❌ Empty mesh: {obj_file}")
+        print(f" Empty mesh: {obj_file}")
         return None
     
-    print(f"✓ Imported: {obj_file.name} ({len(model.data.vertices)} vertices)")
+    print(f" Imported: {obj_file.name} ({len(model.data.vertices)} vertices)")
     return model
 
 
@@ -399,7 +399,7 @@ def main():
     for jaw in ['upper', 'lower']:
         folder = BASE_DIR / jaw
         if not folder.exists():
-            print(f"❌ Folder not found: {folder}")
+            print(f" Folder not found: {folder}")
             continue
             
         print(f"\n{'='*60}")
@@ -412,11 +412,20 @@ def main():
                 
             obj_file = patient_folder / f"{patient_folder.name}_{jaw}.obj"
             if not obj_file.exists():
-                print(f"❌ OBJ file not found: {obj_file}")
+                print(f" OBJ file not found: {obj_file}")
                 continue
             
             total_processed += 1
             print(f"\n[{total_processed}] Processing: {patient_folder.name}")
+
+            # Check if already rendered
+            subdir_path = OUTPUT_DIR / f"{jaw}jaw"
+            out_path = subdir_path / f"{patient_folder.name}_{jaw}_top.png"
+            
+            if out_path.exists():
+                print(f" Skipping (already rendered): {out_path.name}")
+                total_rendered += 1
+                continue
 
             try:
                 # Clear existing mesh objects
@@ -443,11 +452,11 @@ def main():
                 jaw_type = jaw  # 'upper' or 'lower'
                 print(f"Jaw type: {jaw_type}")
                 
-                # Prepare model once (统一的处理流程)
+                # Prepare model once for all views
                 prepare_model(model, jaw_type)
                 bpy.context.view_layer.update()
-                
-                # Setup camera and lighting (统一配置)
+
+                # Setup camera and lighting (unified settings)
                 cam, center, target = setup_camera(model, margin=1.1)
                 setup_lighting(center, target)
                 
@@ -461,12 +470,12 @@ def main():
                 # Render
                 print(f"  Rendering...")
                 bpy.ops.render.render(write_still=True)
-                print(f"  ✓ Saved: {out_name}")
+                print(f"  Saved: {out_name}")
                 total_rendered += 1
                     
             except Exception as e:
                 error_msg = f"Error processing {obj_file}: {str(e)}"
-                print(f"❌ {error_msg}")
+                print(f" {error_msg}")
                 errors.append(error_msg)
                 continue
     
@@ -479,13 +488,13 @@ def main():
     print(f"Output directory: {OUTPUT_DIR}")
     
     if errors:
-        print(f"\n⚠ Errors encountered ({len(errors)}):")
+        print(f"\n Errors encountered ({len(errors)}):")
         for error in errors[:10]:
             print(f"  • {error}")
         if len(errors) > 10:
             print(f"  ... and {len(errors) - 10} more errors")
     else:
-        print("\n✓ No errors encountered!")
+        print("\n No errors encountered!")
 
 
 if __name__ == "__main__":

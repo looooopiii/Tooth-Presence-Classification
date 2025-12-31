@@ -8,7 +8,7 @@ import math
 
 # ===================== CONFIG =====================
 AUG_ROOT = Path("/home/user/lzhou/week10/output/augment_random")   
-OUTPUT_ROOT = Path("/home/user/lzhou/week15/render_output/render_aug_random") 
+OUTPUT_ROOT = Path("/home/user/lzhou/week15/render_output/render_aug_random")
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
 # only top view
@@ -17,25 +17,39 @@ CAMERA_VIEWS = {"top": (0.0, -1.0, 0.0)}
 
 # =========== UNIFIED RENDER SETTINGS ===========
 def setup_render_settings():
-    """统一的渲染设置 - 与其他脚本完全一致"""
+    # generalized render settings
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
+    # try to use GPU, if not using CPU
+    gpu_available = False
     try:
         prefs = bpy.context.preferences.addons['cycles'].preferences
         if hasattr(prefs, "compute_device_type"):
             prefs.compute_device_type = 'CUDA'
         bpy.context.preferences.addons['cycles'].preferences.get_devices()
-        for dev in prefs.devices:
-            if getattr(dev, "type", "") == 'CUDA':
-                dev.use = True
-            else:
-                dev.use = False
-    except Exception:
-        pass
+
+        # check for available CUDA devices
+        cuda_devices = [dev for dev in prefs.devices if getattr(dev, "type", "") == 'CUDA']
+        if cuda_devices:
+            for dev in prefs.devices:
+                if getattr(dev, "type", "") == 'CUDA':
+                    dev.use = True
+                else:
+                    dev.use = False
+            scene.cycles.device = 'GPU'
+            gpu_available = True
+            print("[GPU] CUDA devices found and enabled")
+        else:
+            print("[INFO] No CUDA devices found, using CPU")
+    except Exception as e:
+        print(f"[INFO] GPU initialization failed ({e}), using CPU")
     
-    scene.cycles.device = 'GPU'
-    scene.cycles.samples = 512  # 统一高质量采样
+    if not gpu_available:
+        scene.cycles.device = 'CPU'
+        print("[CPU] Rendering with CPU")
+
+    scene.cycles.samples = 512  # unified high-quality sampling
     scene.cycles.use_adaptive_sampling = True
     
     try:
@@ -43,14 +57,14 @@ def setup_render_settings():
     except Exception:
         pass
 
-    # 统一分辨率
+    # unified resolution
     scene.render.resolution_x = 2048
     scene.render.resolution_y = 2048
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.film_transparent = False
 
-    # 统一黑色背景
+    # unified black background
     if scene.world is None:
         scene.world = bpy.data.worlds.new("SceneWorld")
     scene.world.use_nodes = True
@@ -61,7 +75,7 @@ def setup_render_settings():
     wout = nt.nodes.new('ShaderNodeOutputWorld')
     nt.links.new(bg.outputs['Background'], wout.inputs['Surface'])
 
-    # 统一色调映射
+    # unified color mapping
     scene.view_settings.view_transform = 'Filmic'
     scene.view_settings.look = 'High Contrast'
     scene.view_settings.exposure = 1.5
@@ -72,7 +86,7 @@ def setup_render_settings():
 
 # =========== UNIFIED LIGHTING ===========
 def setup_lighting(center=(0, 0, 0)):
-    """统一的光照设置 - 与其他脚本完全一致"""
+    """unified lighting settings, consistent with other scripts"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type == 'LIGHT':
@@ -102,7 +116,7 @@ def setup_lighting(center=(0, 0, 0)):
         return L
 
     cx, cy, cz = center
-    # 统一的光照配置
+    # Add lights
     add_tracked_light('SPOT', (cx, cy - 150, cz + 220), energy=250000, spot_deg=55)
     add_tracked_light('AREA', (cx - 260, cy - 200, cz + 190), energy=85000, size=420)
     add_tracked_light('AREA', (cx + 260, cy + 200, cz + 190), energy=85000, size=420)
@@ -113,7 +127,7 @@ def setup_lighting(center=(0, 0, 0)):
 
 # =========== UNIFIED MATERIAL ===========
 def create_tooth_material():
-    """统一的牙齿材质 - 与其他脚本完全一致"""
+    """unified tooth material, consistent with other scripts"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -174,16 +188,14 @@ def fill_holes_in_object(obj, smooth_factor=0.2):
 
 # ============== MODEL PREPARATION ===================
 def prepare_model(model_obj):
-    """准备模型 - 使用统一材质"""
+    """Prepare the imported model: fill holes, unify material, center, and estimate camera distance."""
     fill_holes_in_object(model_obj)
-    
-    # 统一材质
+
+    # unified material - remove all old materials, use only one
     mat = create_tooth_material()
-    if model_obj.data.materials:
-        model_obj.data.materials[0] = mat
-    else:
-        model_obj.data.materials.append(mat)
-    
+    model_obj.data.materials.clear()  # ← remove all materials (including Gingiva)
+    model_obj.data.materials.append(mat)  # ← add only unified material
+
     bpy.ops.object.select_all(action='DESELECT')
     model_obj.select_set(True)
     bpy.context.view_layer.objects.active = model_obj
@@ -214,7 +226,7 @@ def prepare_model(model_obj):
 
 # =================== CAMERA =========================
 def setup_camera(direction_vec, optimal_distance):
-    """设置相机 - 保持原有视角逻辑"""
+    """Set up camera - maintain original perspective logic but unified parameters."""
     # Clear old camera/empty objects (except LightTarget)
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
@@ -312,6 +324,20 @@ def main():
 
             for obj_path in obj_files:
                 total_processed += 1
+
+                # Check if all views exist
+                all_views_exist = True
+                for view_name in CAMERA_VIEWS.keys():
+                    out_path = out_dir / f"{obj_path.stem}_{view_name}.png"
+                    if not out_path.exists():
+                        all_views_exist = False
+                        break
+                
+                if all_views_exist:
+                    print(f"  ⏭ Skipping (already rendered): {obj_path.stem}")
+                    total_rendered += len(CAMERA_VIEWS)
+                    continue
+                
                 try:
                     clear_meshes()
                     
@@ -337,7 +363,7 @@ def main():
                         
                         print(f"  Rendering {obj_path.stem}...")
                         bpy.ops.render.render(write_still=True)
-                        print(f"  ✓ Saved: {out_path.name}")
+                        print(f" Saved: {out_path.name}")
                         total_rendered += 1
 
                 except Exception as e:
@@ -361,7 +387,7 @@ def main():
         if len(errors) > 12:
             print(f"  ... and {len(errors)-12} more")
     else:
-        print("\n✓ No errors encountered.")
+        print("\n No errors encountered.")
 
 
 if __name__ == "__main__":

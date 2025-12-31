@@ -19,7 +19,7 @@ CAMERA_VIEWS = {
 
 # =========== UNIFIED RENDER SETTINGS ===========
 def setup_render_settings():
-    """统一的渲染设置 - 与其他脚本完全一致"""
+    """generalized render settings - consistent with other scripts"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
@@ -37,7 +37,7 @@ def setup_render_settings():
         pass
     
     scene.cycles.device = 'GPU'
-    scene.cycles.samples = 512  # 统一高质量采样
+    scene.cycles.samples = 512  # unified high-quality sampling
     scene.cycles.use_adaptive_sampling = True
     
     try:
@@ -45,14 +45,14 @@ def setup_render_settings():
     except Exception:
         pass
 
-    # 统一分辨率
+    # unified resolution
     scene.render.resolution_x = 2048
     scene.render.resolution_y = 2048
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.film_transparent = False
 
-    # 统一黑色背景
+    # unified black background
     if scene.world is None:
         scene.world = bpy.data.worlds.new("SceneWorld")
     scene.world.use_nodes = True
@@ -63,7 +63,7 @@ def setup_render_settings():
     wout = nt.nodes.new('ShaderNodeOutputWorld')
     nt.links.new(bg.outputs['Background'], wout.inputs['Surface'])
 
-    # 统一色调映射
+    # unified color mapping
     scene.view_settings.view_transform = 'Filmic'
     scene.view_settings.look = 'High Contrast'
     scene.view_settings.exposure = 1.5
@@ -74,7 +74,7 @@ def setup_render_settings():
 
 # =========== UNIFIED LIGHTING ===========
 def setup_lighting(center=(0, 0, 0)):
-    """统一的光照设置 - 与其他脚本完全一致"""
+    """unified lighting settings, consistent with other scripts"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type == 'LIGHT':
@@ -104,7 +104,7 @@ def setup_lighting(center=(0, 0, 0)):
         return L
 
     cx, cy, cz = center
-    # 统一的光照配置
+    # unified lighting settings
     add_tracked_light('SPOT', (cx, cy - 150, cz + 220), energy=250000, spot_deg=55)
     add_tracked_light('AREA', (cx - 260, cy - 200, cz + 190), energy=85000, size=420)
     add_tracked_light('AREA', (cx + 260, cy + 200, cz + 190), energy=85000, size=420)
@@ -115,7 +115,7 @@ def setup_lighting(center=(0, 0, 0)):
 
 # =========== UNIFIED MATERIAL ===========
 def create_tooth_material():
-    """统一的牙齿材质 - 与其他脚本完全一致"""
+    """unified tooth material, consistent with other scripts"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -176,15 +176,13 @@ def fill_holes_in_object(obj, smooth_factor=0.2):
 
 # ============== MODEL PREPARATION ===================
 def prepare_model(model_obj):
-    """准备模型 - 使用统一材质"""
+    """Prepare the imported model: fill holes, unify material, center, and estimate camera distance."""
     fill_holes_in_object(model_obj)
-    
-    # 统一材质
+
+    # unified material - remove all old materials, use only one
     mat = create_tooth_material()
-    if model_obj.data.materials:
-        model_obj.data.materials[0] = mat
-    else:
-        model_obj.data.materials.append(mat)
+    model_obj.data.materials.clear()  # ← remove all materials (including Gingiva)
+    model_obj.data.materials.append(mat)  # ← add only unified material
 
     # Smooth shading
     bpy.ops.object.select_all(action='DESELECT')
@@ -216,12 +214,12 @@ def prepare_model(model_obj):
 
 # =================== CAMERA =========================
 def setup_camera(direction_vec, optimal_distance):
-    """设置相机 - 保持原有视角逻辑"""
+    """Set up camera - maintain original perspective logic but unified parameters."""
     # Delete old camera/empty objects
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type in ['CAMERA', 'EMPTY']:
-            # 跳过光照目标
+            # Skip light target
             if obj.name == "LightTarget":
                 continue
             obj.select_set(True)
@@ -337,7 +335,7 @@ def main():
                         
                         print(f"  Rendering {obj_path.stem}...")
                         bpy.ops.render.render(write_still=True)
-                        print(f"  ✓ Saved: {out_path.name}")
+                        print(f" Saved: {out_path.name}")
                         total_rendered += 1
 
                 except Exception as e:
@@ -361,7 +359,7 @@ def main():
         if len(errors) > 12:
             print(f"  ... and {len(errors)-12} more")
     else:
-        print("\n✓ No errors encountered.")
+        print("\n No errors encountered.")
 
 if __name__ == "__main__":
     main()
