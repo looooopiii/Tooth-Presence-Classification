@@ -1,0 +1,2493 @@
+{
+  "model_type": "Augmented Dynamic Loss",
+  "architecture": "16+1 (16 positions + 1 jaw)",
+  "selection_metric": "macro_recall",
+  "best_strategy": "average",
+  "all_strategies": {
+    "average": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.6804635761589404,
+          "recall": 0.7313167259786477,
+          "f1": 0.7049742710120068,
+          "accuracy": 0.8712574850299402,
+          "balanced_accuracy": 0.8199237658329257
+        },
+        "overall_macro": {
+          "macro_precision": 0.2561796773921195,
+          "macro_recall": 0.3365757278103497,
+          "macro_f1": 0.2780085042863212
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8620689655172413,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.88125,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.7375,
+            "recall": 1.0,
+            "f1": 0.8489208633093526,
+            "accuracy": 0.7375,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.43333333333333335,
+            "recall": 0.8125,
+            "f1": 0.5652173913043478,
+            "accuracy": 0.75,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.45161290322580644,
+            "recall": 0.8235294117647058,
+            "f1": 0.5833333333333334,
+            "accuracy": 0.75,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.75,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.875,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.625,
+            "recall": 0.7894736842105263,
+            "f1": 0.6976744186046512,
+            "accuracy": 0.8375,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.625,
+            "recall": 0.8695652173913043,
+            "f1": 0.7272727272727273,
+            "accuracy": 0.8125,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.8125,
+            "recall": 1.0,
+            "f1": 0.896551724137931,
+            "accuracy": 0.8125,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8372093023255814,
+            "recall": 1.0,
+            "f1": 0.9113924050632911,
+            "accuracy": 0.8390804597701149,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.5555555555555556,
+            "recall": 0.6666666666666666,
+            "f1": 0.6060606060606061,
+            "accuracy": 0.7011494252873564,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.38461538461538464,
+            "recall": 0.9375,
+            "f1": 0.5454545454545454,
+            "accuracy": 0.7126436781609196,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.25,
+            "recall": 0.07692307692307693,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9885057471264368,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.5,
+            "recall": 0.06666666666666667,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.48484848484848486,
+            "recall": 0.8888888888888888,
+            "f1": 0.6274509803921569,
+            "accuracy": 0.7816091954022989,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.65,
+            "recall": 0.8387096774193549,
+            "f1": 0.7323943661971831,
+            "accuracy": 0.7816091954022989,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8505747126436781,
+            "recall": 1.0,
+            "f1": 0.9192546583850931,
+            "accuracy": 0.8505747126436781,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.3562813997268677,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "max_confidence": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.7084805653710248,
+          "recall": 0.7135231316725978,
+          "f1": 0.7109929078014184,
+          "accuracy": 0.8779940119760479,
+          "balanced_accuracy": 0.8176620397699482
+        },
+        "overall_macro": {
+          "macro_precision": 0.26698193151467775,
+          "macro_recall": 0.3208658734094163,
+          "macro_f1": 0.281452693089706
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8642241379310345,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.89296875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.7375,
+            "recall": 1.0,
+            "f1": 0.8489208633093526,
+            "accuracy": 0.7375,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.5,
+            "recall": 0.6875,
+            "f1": 0.5789473684210527,
+            "accuracy": 0.8,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.6363636363636364,
+            "recall": 0.8235294117647058,
+            "f1": 0.717948717948718,
+            "accuracy": 0.8625,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.75,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.875,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.7,
+            "recall": 0.7368421052631579,
+            "f1": 0.717948717948718,
+            "accuracy": 0.8625,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.6428571428571429,
+            "recall": 0.782608695652174,
+            "f1": 0.7058823529411765,
+            "accuracy": 0.8125,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.8125,
+            "recall": 1.0,
+            "f1": 0.896551724137931,
+            "accuracy": 0.8125,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8372093023255814,
+            "recall": 1.0,
+            "f1": 0.9113924050632911,
+            "accuracy": 0.8390804597701149,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.5714285714285714,
+            "recall": 0.6666666666666666,
+            "f1": 0.6153846153846154,
+            "accuracy": 0.7126436781609196,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.4117647058823529,
+            "recall": 0.875,
+            "f1": 0.56,
+            "accuracy": 0.7471264367816092,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.2,
+            "recall": 0.07692307692307693,
+            "f1": 0.1111111111111111,
+            "accuracy": 0.8160919540229885,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9885057471264368,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.5,
+            "recall": 0.06666666666666667,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.4666666666666667,
+            "recall": 0.7777777777777778,
+            "f1": 0.5833333333333334,
+            "accuracy": 0.7701149425287356,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.6666666666666666,
+            "recall": 0.7741935483870968,
+            "f1": 0.7164179104477612,
+            "accuracy": 0.7816091954022989,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8604651162790697,
+            "recall": 1.0,
+            "f1": 0.925,
+            "accuracy": 0.8620689655172413,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.4759337902069092,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "best_angle": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.7274401473296501,
+          "recall": 0.702846975088968,
+          "f1": 0.7149321266968326,
+          "accuracy": 0.8821107784431138,
+          "balanced_accuracy": 0.8163523974970907
+        },
+        "overall_macro": {
+          "macro_precision": 0.2702910163256554,
+          "macro_recall": 0.31478749935563144,
+          "macro_f1": 0.2835022420243407
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8685344827586207,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.896875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.8082191780821918,
+            "recall": 1.0,
+            "f1": 0.8939393939393939,
+            "accuracy": 0.825,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.35714285714285715,
+            "recall": 0.625,
+            "f1": 0.45454545454545453,
+            "accuracy": 0.7,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.6363636363636364,
+            "recall": 0.8235294117647058,
+            "f1": 0.717948717948718,
+            "accuracy": 0.8625,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.7375,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8625,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.6111111111111112,
+            "recall": 0.5789473684210527,
+            "f1": 0.5945945945945946,
+            "accuracy": 0.8125,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.7142857142857143,
+            "recall": 0.8695652173913043,
+            "f1": 0.7843137254901961,
+            "accuracy": 0.8625,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.9027777777777778,
+            "recall": 1.0,
+            "f1": 0.948905109489051,
+            "accuracy": 0.9125,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8470588235294118,
+            "recall": 1.0,
+            "f1": 0.9171974522292994,
+            "accuracy": 0.8505747126436781,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.625,
+            "recall": 0.6666666666666666,
+            "f1": 0.6451612903225806,
+            "accuracy": 0.7471264367816092,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.4666666666666667,
+            "recall": 0.875,
+            "f1": 0.6086956521739131,
+            "accuracy": 0.7931034482758621,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.4,
+            "recall": 0.15384615384615385,
+            "f1": 0.2222222222222222,
+            "accuracy": 0.8390804597701149,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.25,
+            "recall": 0.06666666666666667,
+            "f1": 0.10526315789473684,
+            "accuracy": 0.8045977011494253,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.5172413793103449,
+            "recall": 0.8333333333333334,
+            "f1": 0.6382978723404256,
+            "accuracy": 0.8045977011494253,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.6428571428571429,
+            "recall": 0.5806451612903226,
+            "f1": 0.6101694915254238,
+            "accuracy": 0.735632183908046,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8705882352941177,
+            "recall": 1.0,
+            "f1": 0.9308176100628931,
+            "accuracy": 0.8735632183908046,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.452358216047287,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "best_n_angles": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.7309833024118738,
+          "recall": 0.701067615658363,
+          "f1": 0.7157129881925522,
+          "accuracy": 0.8828592814371258,
+          "balanced_accuracy": 0.8161736182557218
+        },
+        "overall_macro": {
+          "macro_precision": 0.27943990539400876,
+          "macro_recall": 0.30999121527674556,
+          "macro_f1": 0.28224636956631705
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.867816091954023,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.89921875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.7972972972972973,
+            "recall": 1.0,
+            "f1": 0.8872180451127819,
+            "accuracy": 0.8125,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.375,
+            "recall": 0.5625,
+            "f1": 0.45,
+            "accuracy": 0.725,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.6666666666666666,
+            "recall": 0.8235294117647058,
+            "f1": 0.7368421052631579,
+            "accuracy": 0.875,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.75,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8625,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.6666666666666666,
+            "recall": 0.631578947368421,
+            "f1": 0.6486486486486487,
+            "accuracy": 0.8375,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.6785714285714286,
+            "recall": 0.8260869565217391,
+            "f1": 0.7450980392156863,
+            "accuracy": 0.8375,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.9027777777777778,
+            "recall": 1.0,
+            "f1": 0.948905109489051,
+            "accuracy": 0.9125,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8470588235294118,
+            "recall": 1.0,
+            "f1": 0.9171974522292994,
+            "accuracy": 0.8505747126436781,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.5714285714285714,
+            "recall": 0.6666666666666666,
+            "f1": 0.6153846153846154,
+            "accuracy": 0.7126436781609196,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.41935483870967744,
+            "recall": 0.8125,
+            "f1": 0.5531914893617021,
+            "accuracy": 0.7586206896551724,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.5,
+            "recall": 0.15384615384615385,
+            "f1": 0.23529411764705882,
+            "accuracy": 0.8505747126436781,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9770114942528736,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.5,
+            "recall": 0.06666666666666667,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.48,
+            "recall": 0.6666666666666666,
+            "f1": 0.5581395348837209,
+            "accuracy": 0.7816091954022989,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.6666666666666666,
+            "recall": 0.7096774193548387,
+            "f1": 0.6875,
+            "accuracy": 0.7701149425287356,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8705882352941177,
+            "recall": 1.0,
+            "f1": 0.9308176100628931,
+            "accuracy": 0.8735632183908046,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.42732110619544983,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "majority_vote": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.7295825771324864,
+          "recall": 0.7153024911032029,
+          "f1": 0.7223719676549866,
+          "accuracy": 0.8843562874251497,
+          "balanced_accuracy": 0.8223431886795636
+        },
+        "overall_macro": {
+          "macro_precision": 0.3008692005499441,
+          "macro_recall": 0.3221130697132004,
+          "macro_f1": 0.2903353463739164
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8728448275862069,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.896875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.7763157894736842,
+            "recall": 1.0,
+            "f1": 0.8740740740740741,
+            "accuracy": 0.7875,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.43478260869565216,
+            "recall": 0.625,
+            "f1": 0.5128205128205128,
+            "accuracy": 0.7625,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.44,
+            "recall": 0.6470588235294118,
+            "f1": 0.5238095238095238,
+            "accuracy": 0.75,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.75,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.875,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.7222222222222222,
+            "recall": 0.6842105263157895,
+            "f1": 0.7027027027027027,
+            "accuracy": 0.8625,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.7916666666666666,
+            "recall": 0.8260869565217391,
+            "f1": 0.8085106382978723,
+            "accuracy": 0.8875,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.8904109589041096,
+            "recall": 1.0,
+            "f1": 0.9420289855072463,
+            "accuracy": 0.9,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8372093023255814,
+            "recall": 1.0,
+            "f1": 0.9113924050632911,
+            "accuracy": 0.8390804597701149,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.5675675675675675,
+            "recall": 0.7,
+            "f1": 0.6268656716417911,
+            "accuracy": 0.7126436781609196,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.4375,
+            "recall": 0.875,
+            "f1": 0.5833333333333334,
+            "accuracy": 0.7701149425287356,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 1.0,
+            "recall": 0.15384615384615385,
+            "f1": 0.26666666666666666,
+            "accuracy": 0.8735632183908046,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9885057471264368,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.6666666666666666,
+            "recall": 0.13333333333333333,
+            "f1": 0.2222222222222222,
+            "accuracy": 0.8390804597701149,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.5714285714285714,
+            "recall": 0.8888888888888888,
+            "f1": 0.6956521739130435,
+            "accuracy": 0.8390804597701149,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.631578947368421,
+            "recall": 0.7741935483870968,
+            "f1": 0.6956521739130435,
+            "accuracy": 0.7586206896551724,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8604651162790697,
+            "recall": 1.0,
+            "f1": 0.925,
+            "accuracy": 0.8620689655172413,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.4062967896461487,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "weighted_average": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.6954314720812182,
+          "recall": 0.7313167259786477,
+          "f1": 0.7129228100607112,
+          "accuracy": 0.876122754491018,
+          "balanced_accuracy": 0.8230043345533049
+        },
+        "overall_macro": {
+          "macro_precision": 0.2622363359383071,
+          "macro_recall": 0.3365757278103497,
+          "macro_f1": 0.28237279266293946
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8663793103448276,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.88671875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.7468354430379747,
+            "recall": 1.0,
+            "f1": 0.855072463768116,
+            "accuracy": 0.75,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.43333333333333335,
+            "recall": 0.8125,
+            "f1": 0.5652173913043478,
+            "accuracy": 0.75,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.4827586206896552,
+            "recall": 0.8235294117647058,
+            "f1": 0.6086956521739131,
+            "accuracy": 0.775,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.75,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.875,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.6521739130434783,
+            "recall": 0.7894736842105263,
+            "f1": 0.7142857142857143,
+            "accuracy": 0.85,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.6451612903225806,
+            "recall": 0.8695652173913043,
+            "f1": 0.7407407407407407,
+            "accuracy": 0.825,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.8333333333333334,
+            "recall": 1.0,
+            "f1": 0.9090909090909091,
+            "accuracy": 0.8375,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8372093023255814,
+            "recall": 1.0,
+            "f1": 0.9113924050632911,
+            "accuracy": 0.8390804597701149,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.5555555555555556,
+            "recall": 0.6666666666666666,
+            "f1": 0.6060606060606061,
+            "accuracy": 0.7011494252873564,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.39473684210526316,
+            "recall": 0.9375,
+            "f1": 0.5555555555555556,
+            "accuracy": 0.7241379310344828,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.25,
+            "recall": 0.07692307692307693,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9885057471264368,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.5,
+            "recall": 0.06666666666666667,
+            "f1": 0.11764705882352941,
+            "accuracy": 0.8275862068965517,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.5333333333333333,
+            "recall": 0.8888888888888888,
+            "f1": 0.6666666666666666,
+            "accuracy": 0.8160919540229885,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.6666666666666666,
+            "recall": 0.8387096774193549,
+            "f1": 0.7428571428571429,
+            "accuracy": 0.7931034482758621,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8604651162790697,
+            "recall": 1.0,
+            "f1": 0.925,
+            "accuracy": 0.8620689655172413,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.36718717217445374,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    },
+    "jaw_confidence": {
+      "metrics": {
+        "overall_micro": {
+          "precision": 0.7274401473296501,
+          "recall": 0.702846975088968,
+          "f1": 0.7149321266968326,
+          "accuracy": 0.8821107784431138,
+          "balanced_accuracy": 0.8163523974970907
+        },
+        "overall_macro": {
+          "macro_precision": 0.2702910163256554,
+          "macro_recall": 0.31478749935563144,
+          "macro_f1": 0.2835022420243407
+        },
+        "jaw_classification": {
+          "jaw_accuracy": 0.9221556886227545,
+          "jaw_precision": 0.8602150537634409,
+          "jaw_recall": 1.0,
+          "jaw_f1": 0.9248554913294798
+        },
+        "per_jaw": {
+          "upper_jaw_accuracy": 0.8685344827586207,
+          "upper_jaw_samples": 87,
+          "lower_jaw_accuracy": 0.896875,
+          "lower_jaw_samples": 80
+        },
+        "per_position": {
+          "Lower_48": {
+            "position": 0,
+            "fdi": 48,
+            "jaw": "lower",
+            "precision": 0.8082191780821918,
+            "recall": 1.0,
+            "f1": 0.8939393939393939,
+            "accuracy": 0.825,
+            "support": 59
+          },
+          "Lower_47": {
+            "position": 1,
+            "fdi": 47,
+            "jaw": "lower",
+            "precision": 0.35714285714285715,
+            "recall": 0.625,
+            "f1": 0.45454545454545453,
+            "accuracy": 0.7,
+            "support": 16
+          },
+          "Lower_46": {
+            "position": 2,
+            "fdi": 46,
+            "jaw": "lower",
+            "precision": 0.6363636363636364,
+            "recall": 0.8235294117647058,
+            "f1": 0.717948717948718,
+            "accuracy": 0.8625,
+            "support": 17
+          },
+          "Lower_45": {
+            "position": 3,
+            "fdi": 45,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.7375,
+            "support": 20
+          },
+          "Lower_44": {
+            "position": 4,
+            "fdi": 44,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.95,
+            "support": 4
+          },
+          "Lower_43": {
+            "position": 5,
+            "fdi": 43,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_42": {
+            "position": 6,
+            "fdi": 42,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_41": {
+            "position": 7,
+            "fdi": 41,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_31": {
+            "position": 8,
+            "fdi": 31,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.975,
+            "support": 2
+          },
+          "Lower_32": {
+            "position": 9,
+            "fdi": 32,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_33": {
+            "position": 10,
+            "fdi": 33,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9875,
+            "support": 1
+          },
+          "Lower_34": {
+            "position": 11,
+            "fdi": 34,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9625,
+            "support": 3
+          },
+          "Lower_35": {
+            "position": 12,
+            "fdi": 35,
+            "jaw": "lower",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8625,
+            "support": 10
+          },
+          "Lower_36": {
+            "position": 13,
+            "fdi": 36,
+            "jaw": "lower",
+            "precision": 0.6111111111111112,
+            "recall": 0.5789473684210527,
+            "f1": 0.5945945945945946,
+            "accuracy": 0.8125,
+            "support": 19
+          },
+          "Lower_37": {
+            "position": 14,
+            "fdi": 37,
+            "jaw": "lower",
+            "precision": 0.7142857142857143,
+            "recall": 0.8695652173913043,
+            "f1": 0.7843137254901961,
+            "accuracy": 0.8625,
+            "support": 23
+          },
+          "Lower_38": {
+            "position": 15,
+            "fdi": 38,
+            "jaw": "lower",
+            "precision": 0.9027777777777778,
+            "recall": 1.0,
+            "f1": 0.948905109489051,
+            "accuracy": 0.9125,
+            "support": 65
+          },
+          "Upper_18": {
+            "position": 0,
+            "fdi": 18,
+            "jaw": "upper",
+            "precision": 0.8470588235294118,
+            "recall": 1.0,
+            "f1": 0.9171974522292994,
+            "accuracy": 0.8505747126436781,
+            "support": 72
+          },
+          "Upper_17": {
+            "position": 1,
+            "fdi": 17,
+            "jaw": "upper",
+            "precision": 0.625,
+            "recall": 0.6666666666666666,
+            "f1": 0.6451612903225806,
+            "accuracy": 0.7471264367816092,
+            "support": 30
+          },
+          "Upper_16": {
+            "position": 2,
+            "fdi": 16,
+            "jaw": "upper",
+            "precision": 0.4666666666666667,
+            "recall": 0.875,
+            "f1": 0.6086956521739131,
+            "accuracy": 0.7931034482758621,
+            "support": 16
+          },
+          "Upper_15": {
+            "position": 3,
+            "fdi": 15,
+            "jaw": "upper",
+            "precision": 0.4,
+            "recall": 0.15384615384615385,
+            "f1": 0.2222222222222222,
+            "accuracy": 0.8390804597701149,
+            "support": 13
+          },
+          "Upper_14": {
+            "position": 4,
+            "fdi": 14,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_13": {
+            "position": 5,
+            "fdi": 13,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 1
+          },
+          "Upper_12": {
+            "position": 6,
+            "fdi": 12,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9310344827586207,
+            "support": 6
+          },
+          "Upper_11": {
+            "position": 7,
+            "fdi": 11,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9195402298850575,
+            "support": 7
+          },
+          "Upper_21": {
+            "position": 8,
+            "fdi": 21,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9425287356321839,
+            "support": 5
+          },
+          "Upper_22": {
+            "position": 9,
+            "fdi": 22,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9540229885057471,
+            "support": 4
+          },
+          "Upper_23": {
+            "position": 10,
+            "fdi": 23,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.9655172413793104,
+            "support": 3
+          },
+          "Upper_24": {
+            "position": 11,
+            "fdi": 24,
+            "jaw": "upper",
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "accuracy": 0.8850574712643678,
+            "support": 10
+          },
+          "Upper_25": {
+            "position": 12,
+            "fdi": 25,
+            "jaw": "upper",
+            "precision": 0.25,
+            "recall": 0.06666666666666667,
+            "f1": 0.10526315789473684,
+            "accuracy": 0.8045977011494253,
+            "support": 15
+          },
+          "Upper_26": {
+            "position": 13,
+            "fdi": 26,
+            "jaw": "upper",
+            "precision": 0.5172413793103449,
+            "recall": 0.8333333333333334,
+            "f1": 0.6382978723404256,
+            "accuracy": 0.8045977011494253,
+            "support": 18
+          },
+          "Upper_27": {
+            "position": 14,
+            "fdi": 27,
+            "jaw": "upper",
+            "precision": 0.6428571428571429,
+            "recall": 0.5806451612903226,
+            "f1": 0.6101694915254238,
+            "accuracy": 0.735632183908046,
+            "support": 31
+          },
+          "Upper_28": {
+            "position": 15,
+            "fdi": 28,
+            "jaw": "upper",
+            "precision": 0.8705882352941177,
+            "recall": 1.0,
+            "f1": 0.9308176100628931,
+            "accuracy": 0.8735632183908046,
+            "support": 74
+          }
+        }
+      },
+      "stats": {
+        "avg_angles_per_case": 4.1437125748503,
+        "avg_confidence": 0.452358216047287,
+        "jaw_accuracy": 0.9221556886227545
+      }
+    }
+  }
+}
