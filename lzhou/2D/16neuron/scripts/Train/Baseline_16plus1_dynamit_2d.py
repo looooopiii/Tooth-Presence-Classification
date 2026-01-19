@@ -34,8 +34,8 @@ IMG_ROOT_LOWER = "/home/user/lzhou/week15/render_output/train/lowerjaw"
 IMG_ROOT_UPPER = "/home/user/lzhou/week15/render_output/train/upperjaw"
 
 # Outputs
-OUTPUT_DIR = "/home/user/lzhou/week15-17/output/Train2D/16plus1teeth_dynamit"
-PLOT_DIR = "/home/user/lzhou/week15-17/output/Train2D/16plus1teeth_dynamit/plots"
+OUTPUT_DIR = "/home/user/lzhou/week16-17/output/Train2D/16plus1teeth_dynamit"
+PLOT_DIR = "/home/user/lzhou/week16-17/output/Train2D/16plus1teeth_dynamit/plots"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 Path(PLOT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -64,7 +64,7 @@ EARLY_STOPPING_METRIC = "val_pr_auc_macro"  # "val_pr_auc_macro" or "val_macro_f
 DROPOUT_RATE = 0.5
 
 # Macro metrics settings
-MACRO_SUPPORT_MIN = 5  # Only include positions with >= this many positives
+MACRO_SUPPORT_MIN = 1  # Only include positions with >= this many positives
 
 # Threshold tuning
 THRESHOLD_STRATEGY = "per_position"  # "fixed" or "per_position"
@@ -169,7 +169,7 @@ class DynamitLoss16Plus1(nn.Module):
         
         # Combined loss (weighted combination)
         # Teeth loss has more weight since it's the primary task
-        total_loss = 0.8 * teeth_loss + 0.2 * jaw_loss
+        total_loss = 0.5 * teeth_loss + 0.5 * jaw_loss
         
         return total_loss
 

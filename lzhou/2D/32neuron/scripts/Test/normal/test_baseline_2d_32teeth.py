@@ -47,7 +47,7 @@ class FusionStrategy(Enum):
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 MODEL_PATH = "/home/user/lzhou/week15-32/output/Train2D/32teeth/baseline_bce_best_2d_32teeth.pth"
-OUTPUT_DIR = "/home/user/lzhou/week15-32/output/Test2D/32teeth_auto_best"
+OUTPUT_DIR = "/home/user/lzhou/week16-32/output/Test2D/32teeth_auto_best"
 
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -58,6 +58,7 @@ DROPOUT_RATE = 0.5
 
 # ========== FUSION CONFIGURATION ==========
 BEST_N = 2  # Use for BEST_N_ANGLES
+FIXED_STRATEGY = FusionStrategy.BEST_N_ANGLES
 
 # ========== SELECTION METRIC ==========
 # 'balanced_accuracy', 'macro_f1', 'macro_recall', 'macro_precision'
@@ -463,13 +464,7 @@ def get_metric_value(metrics, metric_name):
 def compare_all_strategies(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
     """Compare all fusion strategies and collect results"""
     strategies = [
-        FusionStrategy.AVERAGE,
-        FusionStrategy.MAX_CONFIDENCE,
-        FusionStrategy.BEST_ANGLE,
         FusionStrategy.BEST_N_ANGLES,
-        FusionStrategy.MAJORITY_VOTE,
-        FusionStrategy.WEIGHTED_AVERAGE,
-        FusionStrategy.JAW_CONFIDENCE,
     ]
     
     results = {}
@@ -874,9 +869,9 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
 # =================================================================================
 def main():
     print("\n" + "="*80)
-    print(" "*10 + "2D MODEL TESTING - AUTO-SELECT BEST FUSION STRATEGY")
+    print(" "*10 + "2D BASELINE MODEL TESTING - Fixed STRATEGY")
     print("="*80)
-    print(f" Selection Metric: {SELECTION_METRIC}")
+    print(f" Strategy: {FIXED_STRATEGY.value}")
     print("="*80)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -921,73 +916,39 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    # Compare all strategies
-    print(f"\n[5/6] Comparing all fusion strategies...")
-    results = compare_all_strategies(
-        model, grouped_imgs, labels_dict, jaw_type_dict, device, transform
+    # only use best_n_angles
+    print(f"\n[5/6] Running fixed fusion strategy: {FIXED_STRATEGY.value} ...")
+    preds, targets, ids, stats = test_model(
+        model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, strategy=FIXED_STRATEGY, n_best=BEST_N
     )
+    metrics = calculate_metrics(preds, targets, jaw_type_dict, ids)
     
-    # Print comparison table and select best
-    best_strategy = print_comparison_table(results, SELECTION_METRIC)
+    print(f"\n[6/6] Generating detailed output for strategy: {FIXED_STRATEGY.value}")
+    print_metrics_summary(metrics, FIXED_STRATEGY.value)
+    print_sample_predictions(ids, preds, targets, jaw_type_dict, NUM_SAMPLE_PREDICTIONS)
+    generate_detailed_plots(metrics, preds, targets, OUTPUT_DIR, FIXED_STRATEGY.value)
     
-    # Generate comparison plot
-    generate_comparison_plot(results, OUTPUT_DIR)
-    
-    # Get best strategy data
-    best_data = results[best_strategy]
-    best_metrics = best_data['metrics']
-    best_preds = best_data['preds']
-    best_targets = best_data['targets']
-    best_ids = best_data['ids']
-    
-    # Print detailed metrics for best strategy
-    print(f"\n[6/6] Generating detailed output for best strategy: {best_strategy}")
-    print_metrics_summary(best_metrics, best_strategy)
-    
-    # Print sample predictions
-    print_sample_predictions(best_ids, best_preds, best_targets, jaw_type_dict, NUM_SAMPLE_PREDICTIONS)
-    
-    # Generate detailed plots
-    generate_detailed_plots(best_metrics, best_preds, best_targets, OUTPUT_DIR, best_strategy)
-    
-    # Save all results to JSON
-    results_file = Path(OUTPUT_DIR) / "test_results.json"
-    
-    json_results = {
-        'selection_metric': SELECTION_METRIC,
-        'best_strategy': best_strategy,
-        'all_strategies': {}
+    # save results to json
+    results_to_save = {
+        'strategy': FIXED_STRATEGY.value,
+        'metrics': metrics,
+        'per_tooth': {str(k): v for k, v in metrics['per_tooth'].items()}
     }
-    
-    for strategy, data in results.items():
-        json_results['all_strategies'][strategy] = {
-            'metrics': {
-                'overall_micro': data['metrics']['overall_micro'],
-                'overall_macro': data['metrics']['overall_macro'],
-                'per_jaw': data['metrics']['per_jaw'],
-                'per_tooth': {str(k): v for k, v in data['metrics']['per_tooth'].items()}
-            },
-            'stats': {
-                'avg_angles_per_case': float(np.mean(data['stats']['num_angles_per_case'])),
-                'avg_confidence': float(np.mean(data['stats']['confidence_scores']))
-            }
-        }
-    
+    results_file = Path(OUTPUT_DIR) / "test_results.json"
     with open(results_file, 'w') as f:
-        json.dump(json_results, f, indent=2)
-    
+        json.dump(results_to_save, f, indent=2)
     print(f"\n All results saved to {results_file}")
     
-    # Summary
+    # Final Summary
     print("\n" + "="*80)
     print(" "*30 + "SUMMARY")
     print("="*80)
-    print(f"  Best Strategy: {best_strategy}")
-    print(f"  Balanced Accuracy: {best_metrics['overall_micro']['balanced_accuracy']:.4f}")
-    print(f"  Macro Recall: {best_metrics['overall_macro']['macro_recall']:.4f}")
-    print(f"  Macro F1: {best_metrics['overall_macro']['macro_f1']:.4f}")
-    print(f"  Upper Jaw Accuracy: {best_metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
-    print(f"  Lower Jaw Accuracy: {best_metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
+    print(f"  Strategy: {FIXED_STRATEGY.value}")
+    print(f"  Balanced Accuracy: {metrics['overall_micro']['balanced_accuracy']:.4f}")
+    print(f"  Macro Recall: {metrics['overall_macro']['macro_recall']:.4f}")
+    print(f"  Macro F1: {metrics['overall_macro']['macro_f1']:.4f}")
+    print(f"  Upper Jaw Accuracy: {metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
+    print(f"  Lower Jaw Accuracy: {metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
     print("="*80)
     print(" "*30 + "DONE!")
     print("="*80)

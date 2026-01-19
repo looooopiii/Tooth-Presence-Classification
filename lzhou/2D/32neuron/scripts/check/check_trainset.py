@@ -52,7 +52,7 @@ def get_jaw_type(tooth_id):
 
 def main():
     """Main function to count teeth, save data, and plot distributions - CORRECTED VERSION."""
-    output_dir = '/home/user/lzhou/week15-32/output/check/train'
+    output_dir = '/home/user/lzhou/week16-32/output/check/train'
     os.makedirs(output_dir, exist_ok=True)
 
     # --- Data Counting ---

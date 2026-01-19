@@ -49,8 +49,8 @@ class FusionStrategy(Enum):
 # =================================================================================
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
-MODEL_PATH = "/home/user/lzhou/week15-17/output/Train2D/16plus1teeth_dynamit/dynamit_best_2d_16plus1teeth.pth"
-OUTPUT_DIR = "/home/user/lzhou/week15-17/output/Test2D/16plus1teeth_dynamit_auto_best"
+MODEL_PATH = "/home/user/lzhou/week16-17/output/Train2D/16plus1teeth_dynamit/dynamit_best_2d_16plus1teeth.pth"
+OUTPUT_DIR = "/home/user/lzhou/week16-17/output/Test2D/16plus1teeth_dynamit_auto_best"
 
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -59,6 +59,8 @@ NUM_TEETH_POSITIONS = 16  # 16 positions
 NUM_OUTPUTS = 17  # 16 teeth + 1 jaw
 NUM_SAMPLE_PREDICTIONS = 10
 DROPOUT_RATE = 0.5
+APPLY_UPPER_ROTATION = False
+UPPER_ROTATION_DEGREES = 180
 
 # =================================================================================
 # DEVICE SELECTION
@@ -74,19 +76,19 @@ def resolve_device():
 # ========== FUSION CONFIGURATION ==========
 BEST_N = 2
 
-# ========== SELECTION METRIC ==========
-SELECTION_METRIC = 'macro_f1'
+# ========== FIXED STRATEGY ==========
+FIXED_STRATEGY = FusionStrategy.BEST_N_ANGLES
 
 # ========== METRIC SETTINGS ==========
-MACRO_SUPPORT_MIN = 5  # Only include positions with >= this many positives in macro
+MACRO_SUPPORT_MIN = 1  # Only include positions with >= this many positives in macro
 
 # ========== PR CURVES / THRESHOLD TUNING ==========
 ENABLE_PR_PLOTS = True
-ENABLE_THRESHOLD_TUNING = True
+ENABLE_THRESHOLD_TUNING = False
 THRESHOLD_STRATEGY = "max_f1"  # "min_precision" or "max_f1"
 MIN_PRECISION = 0.2  # Only used for "min_precision"
 THRESHOLDS_FILENAME = "per_tooth_thresholds.json"
-CALIBRATION_RATIO = 0.2
+CALIBRATION_RATIO = 0
 CALIBRATION_SEED = 42
 
 # FDI Notation - 16 positions mapping
@@ -404,6 +406,8 @@ def test_model(model, grouped_imgs, labels_dict, jaw_type_dict, device, transfor
             for img_path in data['paths']:
                 try:
                     img = Image.open(img_path).convert('RGB')
+                    if APPLY_UPPER_ROTATION and jaw_type == 'upper':
+                        img = img.rotate(UPPER_ROTATION_DEGREES)
                     img_tensor = transform(img).unsqueeze(0).to(device)
                     logits = model(img_tensor)
                     probs = torch.sigmoid(logits)
@@ -743,121 +747,9 @@ def plot_micro_pr(preds, targets, save_path, title):
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
     plt.close()
 
-def get_metric_value(metrics, metric_name):
-    """Extract specific metric value"""
-    if metric_name == 'balanced_accuracy':
-        return metrics['overall_missing']['balanced_accuracy']
-    elif metric_name == 'macro_f1':
-        return metrics['overall_macro']['macro_f1']
-    elif metric_name == 'macro_recall':
-        return metrics['overall_macro']['macro_recall']
-    elif metric_name == 'macro_precision':
-        return metrics['overall_macro']['macro_precision']
-    elif metric_name == 'accuracy':
-        return metrics['overall_missing']['accuracy']
-    else:
-        return metrics['overall_missing']['balanced_accuracy']
-
-# =================================================================================
-# STRATEGY COMPARISON
-# =================================================================================
-def compare_all_strategies(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
-    """Compare all fusion strategies"""
-    strategies = [
-        FusionStrategy.AVERAGE,
-        FusionStrategy.MAX_CONFIDENCE,
-        FusionStrategy.BEST_ANGLE,
-        FusionStrategy.BEST_N_ANGLES,
-        FusionStrategy.MAJORITY_VOTE,
-        FusionStrategy.WEIGHTED_AVERAGE,
-        FusionStrategy.JAW_CONFIDENCE,
-    ]
-    
-    results = {}
-    
-    for strategy in strategies:
-        print(f"\n{'='*60}")
-        print(f"Testing Strategy: {strategy.value}")
-        print('='*60)
-        
-        preds, targets, ids, stats = test_model(
-            model, grouped_imgs, labels_dict, jaw_type_dict, 
-            device, transform, strategy=strategy, n_best=BEST_N
-        )
-        
-        if len(preds) > 0:
-            preds_bin = None
-            thresholds = None
-            if ENABLE_THRESHOLD_TUNING:
-                per_pos_arrays = build_per_position_arrays(preds, targets, jaw_type_dict, ids)
-                pr_data = compute_pr_data(per_pos_arrays)
-                thresholds = compute_thresholds(pr_data, THRESHOLD_STRATEGY, MIN_PRECISION)
-                preds_bin = binarize_with_thresholds(preds, jaw_type_dict, ids, thresholds)
-            metrics = calculate_metrics_16plus1(preds, targets, jaw_type_dict, ids, preds_bin=preds_bin)
-            results[strategy.value] = {
-                'metrics': metrics,
-                'stats': stats,
-                'preds': preds,
-                'preds_bin': preds_bin,
-                'thresholds': thresholds,
-                'targets': targets,
-                'ids': ids
-            }
-            
-            print(f"  Balanced Accuracy: {metrics['overall_missing']['balanced_accuracy']:.4f}")
-            print(f"  Macro F1: {metrics['overall_macro']['macro_f1']:.4f}")
-            print(f"  Macro Recall: {metrics['overall_macro']['macro_recall']:.4f}")
-            print(f"  Jaw Accuracy: {metrics['jaw_classification']['jaw_accuracy']:.4f}")
-            print(f"  Upper Jaw Acc: {metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
-            print(f"  Lower Jaw Acc: {metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
-    
-    return results
-
-def select_best_strategy(results, metric_name='balanced_accuracy'):
-    """Select best strategy"""
-    best_strategy = None
-    best_value = -1
-    
-    for strategy, data in results.items():
-        value = get_metric_value(data['metrics'], metric_name)
-        if value > best_value:
-            best_value = value
-            best_strategy = strategy
-    
-    return best_strategy, best_value
-
 # =================================================================================
 # PRINTING FUNCTIONS
 # =================================================================================
-def print_comparison_table(results, metric_name='balanced_accuracy'):
-    """Print comparison table"""
-    print("\n" + "="*130)
-    print(" "*45 + "FUSION STRATEGY COMPARISON (16+1 Architecture)")
-    print("="*130)
-    
-    print(f"\n{'Strategy':<20} {'Bal.Acc':>12} {'Macro F1':>12} {'Macro Rec':>12} {'Jaw Acc':>12} {'Upper Acc':>12} {'Lower Acc':>12}")
-    print("-"*130)
-    
-    best_strategy, best_value = select_best_strategy(results, metric_name)
-    
-    for strategy, data in results.items():
-        m = data['metrics']
-        bal_acc = m['overall_missing']['balanced_accuracy']
-        macro_f1 = m['overall_macro']['macro_f1']
-        macro_rec = m['overall_macro']['macro_recall']
-        jaw_acc = m['jaw_classification']['jaw_accuracy']
-        upper_acc = m['per_jaw']['upper_jaw_accuracy']
-        lower_acc = m['per_jaw']['lower_jaw_accuracy']
-        
-        marker = " <-- BEST" if strategy == best_strategy else ""
-        print(f"{strategy:<20} {bal_acc:>12.4f} {macro_f1:>12.4f} {macro_rec:>12.4f} {jaw_acc:>12.4f} {upper_acc:>12.4f} {lower_acc:>12.4f}{marker}")
-    
-    print("-"*130)
-    print(f"\n Best Strategy (by {metric_name}): {best_strategy} ({best_value:.4f})")
-    print("="*130)
-    
-    return best_strategy
-
 def print_metrics_summary(metrics, strategy_name):
     """Print detailed metrics"""
     micro = metrics['overall_missing']
@@ -1006,65 +898,6 @@ def print_sample_predictions(ids, preds, targets, jaw_type_dict, num_samples=10,
 # =================================================================================
 # PLOTTING
 # =================================================================================
-def generate_comparison_plot(results, save_dir):
-    """Generate comparison plot"""
-    strategies = list(results.keys())
-    
-    bal_accs = [results[s]['metrics']['overall_missing']['balanced_accuracy'] for s in strategies]
-    macro_f1s = [results[s]['metrics']['overall_macro']['macro_f1'] for s in strategies]
-    macro_recs = [results[s]['metrics']['overall_macro']['macro_recall'] for s in strategies]
-    jaw_accs = [results[s]['metrics']['jaw_classification']['jaw_accuracy'] for s in strategies]
-    
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    
-    x = np.arange(len(strategies))
-    colors = plt.cm.Set2(np.linspace(0, 1, len(strategies)))
-    
-    # Balanced Accuracy
-    bars1 = axes[0, 0].bar(x, bal_accs, color=colors)
-    axes[0, 0].set_xticks(x)
-    axes[0, 0].set_xticklabels(strategies, rotation=45, ha='right', fontsize=9)
-    axes[0, 0].set_title('Balanced Accuracy', fontsize=12, fontweight='bold')
-    axes[0, 0].set_ylim(0.7, 1)
-    best_idx = np.argmax(bal_accs)
-    bars1[best_idx].set_color('red')
-    bars1[best_idx].set_edgecolor('darkred')
-    bars1[best_idx].set_linewidth(2)
-    
-    # Macro F1
-    bars2 = axes[0, 1].bar(x, macro_f1s, color=colors)
-    axes[0, 1].set_xticks(x)
-    axes[0, 1].set_xticklabels(strategies, rotation=45, ha='right', fontsize=9)
-    axes[0, 1].set_title('Macro F1 Score', fontsize=12, fontweight='bold')
-    axes[0, 1].set_ylim(0, 1)
-    best_idx = np.argmax(macro_f1s)
-    bars2[best_idx].set_color('red')
-    
-    # Macro Recall
-    bars3 = axes[1, 0].bar(x, macro_recs, color=colors)
-    axes[1, 0].set_xticks(x)
-    axes[1, 0].set_xticklabels(strategies, rotation=45, ha='right', fontsize=9)
-    axes[1, 0].set_title('Macro Recall', fontsize=12, fontweight='bold')
-    axes[1, 0].set_ylim(0, 1)
-    best_idx = np.argmax(macro_recs)
-    bars3[best_idx].set_color('red')
-    
-    # Jaw Accuracy
-    bars4 = axes[1, 1].bar(x, jaw_accs, color=colors)
-    axes[1, 1].set_xticks(x)
-    axes[1, 1].set_xticklabels(strategies, rotation=45, ha='right', fontsize=9)
-    axes[1, 1].set_title('Jaw Classification Accuracy', fontsize=12, fontweight='bold')
-    axes[1, 1].set_ylim(0.7, 1)
-    best_idx = np.argmax(jaw_accs)
-    bars4[best_idx].set_color('red')
-    
-    plt.suptitle('Fusion Strategy Comparison (16+1 Architecture)\n(Red = Best)', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    plt.savefig(Path(save_dir) / "fusion_strategy_comparison_16plus1.png", dpi=150, bbox_inches='tight')
-    plt.close()
-    
-    print(f" Comparison plot saved to {save_dir}/fusion_strategy_comparison_16plus1.png")
-
 def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name, preds_bin=None):
     """Generate detailed plots for 16+1"""
     per_position = metrics['per_position']
@@ -1150,9 +983,9 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name, pr
 # =================================================================================
 def main():
     print("\n" + "="*80)
-    print(" "*5 + "2D MODEL TESTING - 16+1 ARCHITECTURE - AUTO-SELECT BEST STRATEGY")
+    print(" "*6 + "2D MODEL TESTING - 16+1 ARCHITECTURE - FIXED STRATEGY")
     print("="*80)
-    print(f" Selection Metric: {SELECTION_METRIC}")
+    print(f" Strategy: {FIXED_STRATEGY.value}")
     print("="*80)
     
     device = resolve_device()
@@ -1212,30 +1045,31 @@ def main():
         grouped_imgs, labels_dict, jaw_type_dict, test_ids
     )
 
-    if cal_grouped:
-        print(f"\n[5/6] Comparing all fusion strategies on calibration split...")
+    best_strategy = FIXED_STRATEGY
+    best_strategy_name = best_strategy.value
+    best_thresholds = None
+
+    if ENABLE_THRESHOLD_TUNING and cal_grouped:
+        print("\n[Info] Calibrating thresholds on calibration split...")
         print(f" Calibration cases: {len(cal_grouped)} | Test cases: {len(test_grouped)}")
-        results = compare_all_strategies(
-            model, cal_grouped, cal_labels, cal_jaws, device, transform
+        cal_preds, cal_targets, cal_ids, _ = test_model(
+            model, cal_grouped, cal_labels, cal_jaws, device, transform,
+            strategy=best_strategy, n_best=BEST_N
         )
-    else:
-        print(f"\n[5/6] Comparing all fusion strategies on test set (no calibration split)...")
-        results = compare_all_strategies(
-            model, test_grouped, test_labels, test_jaws, device, transform
-        )
-
-    best_strategy = print_comparison_table(results, SELECTION_METRIC)
-    generate_comparison_plot(results, OUTPUT_DIR)
-
-    best_thresholds = results[best_strategy].get('thresholds')
+        per_pos_arrays = build_per_position_arrays(cal_preds, cal_targets, cal_jaws, cal_ids)
+        pr_data = compute_pr_data(per_pos_arrays)
+        best_thresholds = compute_thresholds(pr_data, THRESHOLD_STRATEGY, MIN_PRECISION)
+    elif ENABLE_THRESHOLD_TUNING:
+        print("\n[Info] Threshold tuning skipped (no calibration split).")
 
     eval_grouped = test_grouped if test_grouped else cal_grouped
     eval_labels = test_labels if test_grouped else cal_labels
     eval_jaws = test_jaws if test_grouped else cal_jaws
 
+    print(f"\n[5/6] Testing strategy: {best_strategy_name}")
     best_preds, best_targets, best_ids, best_stats = test_model(
         model, eval_grouped, eval_labels, eval_jaws, device, transform,
-        strategy=FusionStrategy(best_strategy), n_best=BEST_N
+        strategy=best_strategy, n_best=BEST_N
     )
     best_preds_bin = None
     if ENABLE_THRESHOLD_TUNING and best_thresholds is not None:
@@ -1245,13 +1079,13 @@ def main():
         best_preds, best_targets, eval_jaws, best_ids, preds_bin=best_preds_bin
     )
 
-    print(f"\n[6/6] Generating detailed output for best strategy: {best_strategy}")
-    print_metrics_summary(best_metrics, best_strategy)
+    print(f"\n[6/6] Generating detailed output for strategy: {best_strategy_name}")
+    print_metrics_summary(best_metrics, best_strategy_name)
     print_sample_predictions(
         best_ids, best_preds, best_targets, eval_jaws, NUM_SAMPLE_PREDICTIONS, preds_bin=best_preds_bin
     )
     generate_detailed_plots(
-        best_metrics, best_preds, best_targets, OUTPUT_DIR, best_strategy, preds_bin=best_preds_bin
+        best_metrics, best_preds, best_targets, OUTPUT_DIR, best_strategy_name, preds_bin=best_preds_bin
     )
 
     pr_data = None
@@ -1317,18 +1151,17 @@ def main():
     selection_source = "calibration" if calibration_used else "test"
     json_results = {
         'architecture': '16+1 (16 positions + 1 jaw classifier)',
-        'selection_metric': SELECTION_METRIC,
         'calibration_info': {
             'used': calibration_used,
             'ratio': CALIBRATION_RATIO,
             'calibration_cases': len(cal_grouped),
             'test_cases': len(eval_grouped),
-            'selection_source': selection_source
+            'selection_source': selection_source,
+            'thresholds_calibrated': bool(best_thresholds)
         },
-        'best_strategy': best_strategy,
-        'all_strategies': {},
-        'test_best': {
-            'strategy': best_strategy,
+        'strategy': best_strategy_name,
+        'test': {
+            'strategy': best_strategy_name,
             'metrics': {
                 'overall_missing': best_metrics['overall_missing'],
                 'overall_macro': best_metrics['overall_macro'],
@@ -1343,23 +1176,7 @@ def main():
             }
         }
     }
-    
-    for strategy, data in results.items():
-        json_results['all_strategies'][strategy] = {
-            'metrics': {
-                'overall_missing': data['metrics']['overall_missing'],
-                'overall_macro': data['metrics']['overall_macro'],
-                'jaw_classification': data['metrics']['jaw_classification'],
-                'per_jaw': data['metrics']['per_jaw'],
-                'per_position': {str(k): v for k, v in data['metrics']['per_position'].items()}
-            },
-            'stats': {
-                'avg_angles_per_case': float(np.mean(data['stats']['num_angles_per_case'])),
-                'avg_confidence': float(np.mean(data['stats']['confidence_scores'])),
-                'jaw_accuracy': float(np.mean(data['stats']['jaw_accuracy']))
-            }
-        }
-    
+
     with open(results_file, 'w') as f:
         json.dump(json_results, f, indent=2)
     
@@ -1370,7 +1187,7 @@ def main():
     print(" "*30 + "SUMMARY")
     print("="*80)
     print(f"  Architecture: 16+1 (16 positions + 1 jaw)")
-    print(f"  Best Strategy: {best_strategy}")
+    print(f"  Strategy: {best_strategy_name}")
     print(f"  Balanced Accuracy: {best_metrics['overall_missing']['balanced_accuracy']:.4f}")
     print(f"  Macro Recall: {best_metrics['overall_macro']['macro_recall']:.4f}")
     print(f"  Macro F1: {best_metrics['overall_macro']['macro_f1']:.4f}")

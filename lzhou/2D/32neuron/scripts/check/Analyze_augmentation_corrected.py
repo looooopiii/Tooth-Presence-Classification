@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # ============= CONFIGURATION =============
-AUGMENTED_CSV = "/home/user/lzhou/week10/output/augment_test/train_labels_augmented.csv"
-RANDOM_CSV = "/home/user/lzhou/week10/output/augment_random/train_labels_random.csv"
-OUTPUT_DIR = Path("/home/user/lzhou/week15-32/output/check/Aug")
+AUGMENTED_CSV = "/home/user/lzhou/week16/Aug/augment_test/train_labels_augmented.csv"
+RANDOM_CSV = "/home/user/lzhou/week16/Aug/augment_random/train_labels_random.csv"
+OUTPUT_DIR = Path("/home/user/lzhou/week16-32/output/check/Aug")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # FDI Tooth Notation

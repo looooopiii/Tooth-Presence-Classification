@@ -4,6 +4,8 @@ import shutil
 from pathlib import Path
 import numpy as np
 import random
+import os
+import multiprocessing as mp
 from datetime import datetime
 from tqdm import tqdm
 
@@ -12,12 +14,17 @@ ORIGINAL_TRAIN_DATA_PATHS = [
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower",
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
 ]
-OUTPUT_DIR = Path("/home/user/lzhou/week10/output/augment_random")
+OUTPUT_DIR = Path("/home/user/lzhou/week16/Aug/augment_random")
 
 FILL_BASE = True
 BASE_COLOR = (0.85, 0.70, 0.70)
 RANDOM_SEED = 42
 COPIES_PER_SCAN = 2
+DEBUG_LIMIT = None  # Set to an integer for debugging with fewer samples
+CPU_COUNT = os.cpu_count() or 1
+DEFAULT_WORKERS = max(1, CPU_COUNT - 1)
+WORKERS = int(os.getenv("AUG_WORKERS", str(DEFAULT_WORKERS)))
+WORKERS = max(1, WORKERS)
 
 # Tiered probabilities for tooth removal (updated: wisdom lowest, second molars medium, others high)
 TEETH_REMOVAL_PROBS = {
@@ -70,6 +77,19 @@ def create_updated_json_labels(original_json_path, output_json_path, removed_tee
     for i, label in enumerate(labels):
         if label in removed_teeth_fdi: labels[i] = 0
     with open(output_json_path, 'w') as f: json.dump({'labels': labels}, f)
+
+def _read_obj_cached(obj_path):
+    with open(obj_path, 'r') as f:
+        lines = f.readlines()
+    vertex_lines = [l for l in lines if l.startswith('v ')]
+    face_lines = [l for l in lines if l.startswith('f ')]
+    other_lines = [l for l in lines if not l.startswith(('v ', 'f '))]
+    return {
+        'lines': lines,
+        'vertex_lines': vertex_lines,
+        'face_lines': face_lines,
+        'other_lines': other_lines,
+    }
 
 def _order_loop(adj, start):
     """
@@ -169,16 +189,8 @@ def _parse_face_verts(face_line: str):
 
 def _build_boundary_components(vertices_to_remove, face_lines):
     """
-    Robust boundary detection:
-      1) Classify each face as 'kept' (no removed verts) or 'removed' (touches any removed vert).
-      2) For every edge (u,v) in faces, accumulate counts 'kept_adj', 'removed_adj'.
-      3) An edge is a boundary edge if kept_adj>0 and removed_adj>0 and both endpoints are kept.
-      4) Build an undirected graph over kept vertices with boundary edges.
-      5) Split into connected components and order each as:
-         - closed loop (all degree==2): walk cycle;
-         - open chain (has deg==1 endpoints): walk from an endpoint to the other;
-         - otherwise: greedy walk from an arbitrary start.
-    Returns: list of dicts [{'ordered': [v1,...], 'closed': True/False}, ...]
+    Build boundary components using edge kept/removed adjacency counting.
+    Returns: list of dicts [{'vertices': set([...]), 'edges': [(u,v), ...]}, ...]
     """
     # 1) Parse faces and classify
     faces = []
@@ -214,42 +226,9 @@ def _build_boundary_components(vertices_to_remove, face_lines):
         adj.setdefault(u, set()).add(v)
         adj.setdefault(v, set()).add(u)
 
-    # 5) Connected components and ordering
+    # 5) Connected components and collect edges
     components = []
     visited = set()
-
-    def order_closed_cycle(a0):
-        loop = [a0]
-        prev = None
-        cur = a0
-        while True:
-            nbrs = adj.get(cur, set()) - ({prev} if prev is not None else set())
-            if not nbrs:
-                break
-            nxt = next(iter(nbrs))
-            if nxt == a0:
-                break
-            loop.append(nxt)
-            prev, cur = cur, nxt
-            if len(loop) > 200000:
-                break
-        return loop
-
-    def order_open_chain(start):
-        seq = [start]
-        prev = None
-        cur = start
-        while True:
-            nbrs = adj.get(cur, set()) - ({prev} if prev is not None else set())
-            if not nbrs:
-                break
-            nxt = next(iter(nbrs))
-            seq.append(nxt)
-            prev, cur = cur, nxt
-            if len(seq) > 200000:
-                break
-        return seq
-
     nodes = set(adj.keys())
     for v in list(nodes):
         if v in visited:
@@ -265,27 +244,67 @@ def _build_boundary_components(vertices_to_remove, face_lines):
             comp.add(x)
             stack.extend(list(adj.get(x, [])))
 
-        # degrees within component
-        deg = {k: len(adj.get(k, set()) & comp) for k in comp}
-        deg_vals = list(deg.values())
-        closed = all(d == 2 for d in deg_vals) and len(comp) >= 3
-
-        if closed:
-            start = next(iter(comp))
-            sub_adj = {k: (adj.get(k, set()) & comp) for k in comp}
-            ordered = order_closed_cycle(start)
-        else:
-            # find endpoint (degree==1) if exists; otherwise pick arbitrary
-            endpoints = [k for k, d in deg.items() if d == 1]
-            start = endpoints[0] if endpoints else next(iter(comp))
-            sub_adj = {k: (adj.get(k, set()) & comp) for k in comp}
-            adj_tmp = adj  # reuse
-            ordered = order_open_chain(start)
-
-        if len(ordered) >= 2:
-            components.append({'ordered': ordered, 'closed': closed})
+        comp_edges = [(u, w) for (u, w) in boundary_edges if u in comp and w in comp]
+        if comp_edges:
+            components.append({'vertices': comp, 'edges': comp_edges})
 
     return components
+
+
+def _face_normal(vids, coord_lut):
+    """Compute an (unnormalized) face normal from the first 3 vertices."""
+    if len(vids) < 3:
+        return None
+    v0 = coord_lut.get(vids[0])
+    v1 = coord_lut.get(vids[1])
+    v2 = coord_lut.get(vids[2])
+    if v0 is None or v1 is None or v2 is None:
+        return None
+    a = np.asarray(v1, dtype=np.float64) - np.asarray(v0, dtype=np.float64)
+    b = np.asarray(v2, dtype=np.float64) - np.asarray(v0, dtype=np.float64)
+    n = np.cross(a, b)
+    if np.linalg.norm(n) == 0:
+        return None
+    return n
+
+def _accumulate_boundary_edge_normals(face_lines, vertices_to_remove, coord_lut, boundary_edge_set):
+    edge_normals = {edge: np.zeros(3, dtype=np.float64) for edge in boundary_edge_set}
+    if not boundary_edge_set:
+        return edge_normals
+    for fl in face_lines:
+        vids = _parse_face_verts(fl)
+        if len(vids) < 3:
+            continue
+        if any(v in vertices_to_remove for v in vids):
+            continue
+        n = _face_normal(vids, coord_lut)
+        if n is None:
+            continue
+        m = len(vids)
+        for i in range(m):
+            a, b = vids[i], vids[(i + 1) % m]
+            key = (a, b) if a < b else (b, a)
+            if key in edge_normals:
+                edge_normals[key] += n
+    return edge_normals
+
+def _component_reference_normal(comp_edges, edge_normals, comp_vertices, coord_lut):
+    ref = np.zeros(3, dtype=np.float64)
+    for u, v in comp_edges:
+        key = (u, v) if u < v else (v, u)
+        ref += edge_normals.get(key, 0)
+    if np.linalg.norm(ref) < 1e-9:
+        pts = [coord_lut[v] for v in comp_vertices if v in coord_lut]
+        if len(pts) >= 3:
+            arr = np.asarray(pts, dtype=np.float64)
+            c = arr.mean(axis=0)
+            x = arr - c
+            cov = x.T @ x
+            eigvals, eigvecs = np.linalg.eigh(cov)
+            ref = eigvecs[:, int(np.argmin(eigvals))]
+    if np.linalg.norm(ref) == 0:
+        ref = np.array([0.0, 0.0, 1.0], dtype=np.float64)
+    return ref
 
 def _centroid_of_vertices(old_ids, coord_lut):
     pts = [coord_lut[v] for v in old_ids if v in coord_lut]
@@ -296,15 +315,18 @@ def _centroid_of_vertices(old_ids, coord_lut):
     c = arr.mean(axis=0)
     return c
 
-def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_tooth_labels):
+def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_tooth_labels, obj_cache=None):
     """Removes specified teeth from an OBJ file and fills the resulting hole."""
     output_obj = Path(output_obj)
     if not teeth_to_remove: shutil.copyfile(input_obj, output_obj); return
     vertices_to_remove = {v for tooth in teeth_to_remove for v in all_train_tooth_labels.get(tooth, [])}
     if not vertices_to_remove: shutil.copyfile(input_obj, output_obj); return
-    with open(input_obj, 'r') as f: lines = f.readlines()
-    vertex_lines, face_lines, other_lines = [l for l in lines if l.startswith('v ')], [l for l in lines if l.startswith('f ')], [l for l in lines if not l.startswith(('v ', 'f '))]
-    # robust boundary components (closed loops or open chains)
+    if obj_cache is None:
+        obj_cache = _read_obj_cached(input_obj)
+    vertex_lines = obj_cache['vertex_lines']
+    face_lines = obj_cache['face_lines']
+    other_lines = obj_cache['other_lines']
+    # boundary components from kept/removed adjacency
     boundary_components = _build_boundary_components(vertices_to_remove, face_lines)
     with open(output_obj, 'w') as f:
         mtl_path = output_obj.with_suffix('.mtl'); f.write(f"mtllib {mtl_path.name}\n")
@@ -312,53 +334,110 @@ def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_toot
         for line in other_lines: f.write(line)
         vertex_map, new_idx, all_coords = {}, 1, {}
         for old_idx, line in enumerate(vertex_lines, 1):
-            all_coords[old_idx] = [float(c) for c in line.strip().split()[1:]]
+            coords = [float(c) for c in line.strip().split()[1:4]]
+            if len(coords) < 3:
+                coords = coords + [0.0] * (3 - len(coords))
+            all_coords[old_idx] = coords
             if old_idx not in vertices_to_remove: f.write(line); vertex_map[old_idx] = new_idx; new_idx += 1
 
-        # Build fill fans for each boundary component (closed loop or open chain)
-        loop_infos = []
+        boundary_edge_set = set()
         for comp in boundary_components:
-            loop_old = comp['ordered']
-            # Need at least 2 points to form triangles with a centroid
-            if len(loop_old) < 2:
+            for u, v in comp['edges']:
+                key = (u, v) if u < v else (v, u)
+                boundary_edge_set.add(key)
+        edge_normals = _accumulate_boundary_edge_normals(face_lines, vertices_to_remove, all_coords, boundary_edge_set)
+
+        fill_faces = []
+        for comp in boundary_components:
+            comp_vertices = comp['vertices']
+            comp_edges = comp['edges']
+            if len(comp_vertices) < 2 or not comp_edges:
                 continue
-            centroid = _centroid_of_vertices(loop_old, all_coords)
-            if centroid is None:
+            coords = [all_coords[v] for v in comp_vertices if v in all_coords]
+            if len(coords) < 2:
                 continue
+            centroid = np.mean(np.asarray(coords, dtype=np.float64), axis=0)
             f.write(f"v {centroid[0]:.6f} {centroid[1]:.6f} {centroid[2]:.6f}\n")
             centroid_idx_new = new_idx
             new_idx += 1
-
-            ordered_new = []
-            for v_old in loop_old:
-                if v_old in vertices_to_remove:
+            ref_normal = _component_reference_normal(comp_edges, edge_normals, comp_vertices, all_coords)
+            for u, v in comp_edges:
+                if u not in vertex_map or v not in vertex_map:
                     continue
-                if v_old in vertex_map:
-                    ordered_new.append(vertex_map[v_old])
-
-            # need >=2 edges to form at least one triangle with centroid
-            if len(ordered_new) >= 2:
-                loop_infos.append((centroid_idx_new, ordered_new))
+                u_new = vertex_map[u]
+                v_new = vertex_map[v]
+                cu = np.asarray(all_coords[u], dtype=np.float64)
+                cv = np.asarray(all_coords[v], dtype=np.float64)
+                tri_n = np.cross(cv - cu, centroid - cu)
+                if np.dot(tri_n, ref_normal) < 0:
+                    u_new, v_new = v_new, u_new
+                fill_faces.append((u_new, v_new, centroid_idx_new))
 
         for line in face_lines:
             parts = line.strip().split(); face_verts_old = [int(p.split('/')[0]) for p in parts[1:]]
             if not any(v in vertices_to_remove for v in face_verts_old):
                 new_face = 'f ' + ' '.join(p.replace(str(v_old), str(vertex_map[v_old]), 1) for p, v_old in zip(parts[1:], face_verts_old))
                 f.write(new_face + '\n')
-        # Triangulate each component as a fan to its centroid.
-        if loop_infos:
+        # Cap each boundary edge to the component centroid.
+        if fill_faces:
             f.write("usemtl Gingiva\n")
-            for centroid_idx_new, ordered_new in loop_infos:
-                n = len(ordered_new)
-                if n == 2:
-                    # create a degenerate cap (single triangle) to close tiny slits
-                    v1, v2 = ordered_new[0], ordered_new[1]
-                    f.write(f"f {v1} {v2} {centroid_idx_new}\n")
-                else:
-                    for i in range(n):
-                        v1 = ordered_new[i]
-                        v2 = ordered_new[(i + 1) % n]
-                        f.write(f"f {v1} {v2} {centroid_idx_new}\n")
+            for v1, v2, cidx in fill_faces:
+                f.write(f"f {v1} {v2} {cidx}\n")
+
+def _process_train_sample(args):
+    train_sample, sample_idx = args
+    jaw_type = train_sample['jaw']
+    original_case_id = train_sample['case_id']
+    train_obj_path = train_sample['obj']
+    train_json_path = train_sample['json']
+
+    obj_cache = _read_obj_cached(train_obj_path)
+    all_train_tooth_labels = load_tooth_labels_from_json(train_json_path)
+    teeth_present_in_train = set(all_train_tooth_labels.keys())
+
+    candidate_teeth = UPPER_TEETH if jaw_type == 'upper' else LOWER_TEETH
+    possible_to_remove = [tooth for tooth in candidate_teeth if tooth in teeth_present_in_train]
+    if not possible_to_remove:
+        return []
+
+    weights = [TEETH_REMOVAL_PROBS.get(tooth, BASE_PROB) for tooth in possible_to_remove]
+    rng = random.Random(RANDOM_SEED + sample_idx)
+
+    rows = []
+    output_subdir = OUTPUT_DIR / jaw_type / original_case_id
+    output_subdir.mkdir(parents=True, exist_ok=True)
+
+    for copy_num in range(1, COPIES_PER_SCAN + 1):
+        num_to_remove = rng.randint(2, min(5, len(possible_to_remove)))
+        selected_for_removal = set(rng.choices(possible_to_remove, weights=weights, k=num_to_remove))
+        if not selected_for_removal:
+            continue
+        teeth_present_after = teeth_present_in_train - selected_for_removal
+
+        new_filename_base = f"{original_case_id}_{jaw_type}_randomcopy_{copy_num:02d}"
+        output_obj = output_subdir / f"{new_filename_base}.obj"
+        output_json = output_subdir / f"{new_filename_base}.json"
+
+        remove_teeth_from_obj(train_obj_path, output_obj, selected_for_removal, all_train_tooth_labels, obj_cache)
+        create_updated_json_labels(train_json_path, output_json, selected_for_removal)
+
+        final_flipped_label_dict = {}
+        for tooth in ALL_TEETH:
+            is_in_correct_jaw = (jaw_type == 'upper' and tooth in UPPER_TEETH) or \
+                                (jaw_type == 'lower' and tooth in LOWER_TEETH)
+            if is_in_correct_jaw:
+                final_flipped_label_dict[str(tooth)] = 1 if tooth not in teeth_present_after else 0
+            else:
+                final_flipped_label_dict[str(tooth)] = 1
+
+        rows.append({
+            'filename': str(output_obj.relative_to(OUTPUT_DIR)),
+            'new_id': new_filename_base,
+            'Date of labeling': datetime.now().strftime('%Y-%m-%d'),
+            'filetype': 'obj',
+            **final_flipped_label_dict
+        })
+    return rows
 
 # =========================================
 # MAIN EXECUTION
@@ -373,61 +452,23 @@ def main():
     csv_label_rows = []
     
     all_original_scans = train_samples['upper'] + train_samples['lower']
+    if DEBUG_LIMIT is not None:
+        random.shuffle(all_original_scans)
+        all_original_scans = all_original_scans[:DEBUG_LIMIT]
     total_tasks = len(all_original_scans) * COPIES_PER_SCAN
     
     print(f"[2/3] Starting random augmentation for {total_tasks} new scans...")
+    tasks = [(sample, idx) for idx, sample in enumerate(all_original_scans)]
     with tqdm(total=total_tasks, desc="Augmenting") as pbar:
-        for train_sample in all_original_scans:
-            jaw_type = train_sample['jaw']
-            original_case_id, train_obj_path, train_json_path = train_sample['case_id'], train_sample['obj'], train_sample['json']
-            
-            all_train_tooth_labels = load_tooth_labels_from_json(train_json_path)
-            teeth_present_in_train = set(all_train_tooth_labels.keys())
-
-            for copy_num in range(1, COPIES_PER_SCAN + 1):
-                pbar.set_description(f"Processing {original_case_id}")
-                
-                # Determine which teeth are candidates for removal based on jaw type
-                candidate_teeth = UPPER_TEETH if jaw_type == 'upper' else LOWER_TEETH
-                
-                # Filter candidates to only those present in the current scan
-                possible_to_remove = [tooth for tooth in candidate_teeth if tooth in teeth_present_in_train]
-                if not possible_to_remove:
-                    tqdm.write(f"  > Skipping {original_case_id} Copy {copy_num}: No teeth present to remove.")
-                    pbar.update(1)
-                    continue
-                
-                # Create weights corresponding to the available teeth
-                weights = [TEETH_REMOVAL_PROBS.get(tooth, BASE_PROB) for tooth in possible_to_remove]
-                
-                # Decide how many teeth to remove for this copy
-                num_to_remove = random.randint(2, min(5, len(possible_to_remove)))
-                
-                # Select the teeth to remove using weighted random sampling
-                selected_for_removal = set(random.choices(possible_to_remove, weights=weights, k=num_to_remove))
-                
-                teeth_present_after = teeth_present_in_train - selected_for_removal
-                
-                output_subdir = OUTPUT_DIR / jaw_type / original_case_id
-                output_subdir.mkdir(parents=True, exist_ok=True)
-                new_filename_base = f"{original_case_id}_{jaw_type}_randomcopy_{copy_num:02d}"
-                output_obj, output_json = output_subdir / f"{new_filename_base}.obj", output_subdir / f"{new_filename_base}.json"
-                
-                remove_teeth_from_obj(train_obj_path, output_obj, selected_for_removal, all_train_tooth_labels)
-                create_updated_json_labels(train_json_path, output_json, selected_for_removal)
-                
-                # Create the final, correct label dictionary for the CSV
-                final_flipped_label_dict = {}
-                for tooth in ALL_TEETH:
-                    is_in_correct_jaw = (jaw_type == 'upper' and tooth in UPPER_TEETH) or \
-                                        (jaw_type == 'lower' and tooth in LOWER_TEETH)
-                    if is_in_correct_jaw:
-                        final_flipped_label_dict[str(tooth)] = 1 if tooth not in teeth_present_after else 0
-                    else:
-                        final_flipped_label_dict[str(tooth)] = 1
-                
-                csv_label_rows.append({'filename': str(output_obj.relative_to(OUTPUT_DIR)),'new_id': new_filename_base,'Date of labeling': datetime.now().strftime('%Y-%m-%d'),'filetype': 'obj',**final_flipped_label_dict})
-                pbar.update(1)
+        if WORKERS <= 1:
+            for rows in map(_process_train_sample, tasks):
+                csv_label_rows.extend(rows)
+                pbar.update(len(rows))
+        else:
+            with mp.Pool(processes=WORKERS) as pool:
+                for rows in pool.imap_unordered(_process_train_sample, tasks):
+                    csv_label_rows.extend(rows)
+                    pbar.update(len(rows))
 
     print("\n[3/3] All augmentation tasks complete. Saving master labels CSV...")
     if csv_label_rows:
@@ -437,9 +478,9 @@ def main():
         df_labels = df_labels[cols]
         output_csv_path = OUTPUT_DIR / "train_labels_random.csv"
         df_labels.to_csv(output_csv_path, index=False)
-        print(f"✓ Successfully saved master label file with {len(df_labels)} entries to {output_csv_path}")
+        print(f" Successfully saved master label file with {len(df_labels)} entries to {output_csv_path}")
 
-    print("\n✓ Random augmentation process complete!")
+    print("\n Random augmentation process complete!")
 
 if __name__ == "__main__":
     main()

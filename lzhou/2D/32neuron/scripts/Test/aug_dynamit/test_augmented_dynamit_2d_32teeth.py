@@ -48,8 +48,8 @@ TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 
 # ========== use Augmented Dynamit model ==========
-MODEL_PATH = "/home/user/lzhou/week15-32/output/Train2D/Augmented_32teeth_dynamit/augmented_dynamit_best_2d_32teeth.pth"
-OUTPUT_DIR = "/home/user/lzhou/week15-32/output/Test2D/aug_dynamit_32teeth"
+MODEL_PATH = "/home/user/lzhou/week16-32/output/Train2D/Augmented_32teeth_dynamit/augmented_dynamit_best_2d_32teeth.pth"
+OUTPUT_DIR = "/home/user/lzhou/week16-32/output/Test2D/aug_dynamit_32teeth"
 
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -59,7 +59,7 @@ NUM_SAMPLE_PREDICTIONS = 10
 DROPOUT_RATE = 0.5  
 
 BEST_N = 2
-SELECTION_METRIC = 'macro_f1'  # Options: 'balanced_accuracy', 'macro_f1', 'macro_recall', 'macro_precision', 'accuracy'
+FIXED_STRATEGY = FusionStrategy.BEST_N_ANGLES
 
 # FDI Notation
 VALID_FDI_LABELS = sorted([
@@ -211,8 +211,34 @@ def fuse_predictions(probs_list, strategy=FusionStrategy.AVERAGE, n_best=2, jaw_
 def load_test_labels(csv_path):
     """Load test labels with jaw type handling."""
     df = pd.read_csv(csv_path, dtype={'new_id': str})
-    df['new_id'] = df['new_id'].astype(str).str.strip().str.lower().str.replace('-', '_')
     df.columns = [str(c) for c in df.columns]
+
+    if 'new_id' not in df.columns:
+        raise ValueError("CSV must contain a 'new_id' column.")
+
+    df['new_id'] = df['new_id'].fillna('').astype(str).str.strip()
+    df['new_id'] = df['new_id'].str.lower().str.replace('-', '_')
+    invalid_id_mask = df['new_id'].isin(['', 'nan', 'none'])
+    if invalid_id_mask.any():
+        print(f"  [Warn] Rows with empty new_id: {int(invalid_id_mask.sum())} (ignored)")
+        df = df[~invalid_id_mask].copy()
+
+    missing_tooth_cols = [str(t) for t in VALID_FDI_LABELS if str(t) not in df.columns]
+    if missing_tooth_cols:
+        print(f"  [Warn] Missing tooth columns: {missing_tooth_cols}")
+
+    tooth_cols = [str(t) for t in VALID_FDI_LABELS if str(t) in df.columns]
+    if tooth_cols:
+        missing_rows = int(df[tooth_cols].isna().any(axis=1).sum())
+        if missing_rows > 0:
+            missing_by_col = df[tooth_cols].isna().sum()
+            top_missing = missing_by_col[missing_by_col > 0].sort_values(ascending=False).head(5)
+            print(f"  [Warn] Rows with missing tooth values: {missing_rows}")
+            print(f"  [Warn] Missing tooth values by column (top 5): {top_missing.to_dict()}")
+
+    dup_count = int(df['new_id'].duplicated().sum())
+    if dup_count > 0:
+        print(f"  [Warn] Duplicate new_id rows: {dup_count}")
     
     labels_dict = {}
     jaw_type_dict = {}
@@ -264,24 +290,40 @@ def find_test_images(img_dir, labels_dict):
     print(f" Scanning {len(files)} files in: {img_dir}")
     
     matched_count = 0
+    matched_case_ids = set()
+    unmatched_case_ids = set()
     
     for img_path in files:
         raw_stem = img_path.stem
+        raw_lower = raw_stem.lower()
         norm_id = normalize_png_stem_to_newid(raw_stem)
         
         final_key = None
         if norm_id in labels_dict:
             final_key = norm_id
-        elif raw_stem.lower() in labels_dict:
-            final_key = raw_stem.lower()
+        elif raw_lower in labels_dict:
+            final_key = raw_lower
             
         if final_key:
+            matched_case_ids.add(final_key)
             if final_key not in grouped:
                 grouped[final_key] = {'paths': []}
             grouped[final_key]['paths'].append(str(img_path))
             matched_count += 1
+        else:
+            unmatched_case_ids.add(norm_id)
             
     print(f" Successfully matched {len(grouped)} unique cases from {matched_count} images.")
+    print(f"  [Match] Total images: {len(files)} | Matched images: {matched_count} | Unmatched images: {len(files) - matched_count}")
+
+    label_ids = set(labels_dict.keys())
+    missing_case_ids = sorted(label_ids - matched_case_ids)
+    print(f"  [Match] Labels: {len(label_ids)} | Matched cases: {len(matched_case_ids)} | Missing cases: {len(missing_case_ids)}")
+    if missing_case_ids:
+        print(f"  [Missing labels] Examples: {missing_case_ids[:5]}")
+    if unmatched_case_ids:
+        sample_unmatched = sorted(list(unmatched_case_ids))[:5]
+        print(f"  [Unlabeled images] Unique case IDs: {len(unmatched_case_ids)} | Examples: {sample_unmatched}")
     
     return grouped
 
@@ -442,123 +484,38 @@ def get_metric_value(metrics, metric_name):
         return metrics['overall_micro']['balanced_accuracy']
 
 # =================================================================================
-# COMPARISON OF ALL STRATEGIES
+# COMPARISON OF ALL STRATEGIES - REMOVED
 # =================================================================================
-def compare_all_strategies(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
-    strategies = [
-        FusionStrategy.AVERAGE,
-        FusionStrategy.MAX_CONFIDENCE,
-        FusionStrategy.BEST_ANGLE,
-        FusionStrategy.BEST_N_ANGLES,
-        FusionStrategy.MAJORITY_VOTE,
-        FusionStrategy.WEIGHTED_AVERAGE,
-        FusionStrategy.JAW_CONFIDENCE,
-    ]
-    
+# The original compare_all_strategies / print_comparison_table / generate_comparison_plot
+# utilities have been removed. This script now runs a single fixed fusion strategy
+# defined by FIXED_STRATEGY (BEST_N_ANGLES) to simplify testing.
+
+def run_fixed_strategy(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
+    """Run inference using the fixed strategy and return a results dict keyed by strategy name."""
+    strategy = FIXED_STRATEGY
+    print(f"\n{'='*60}")
+    print(f"Testing Fixed Strategy: {strategy.value}")
+    print('='*60)
+
+    preds, targets, ids, stats = test_model(
+        model, grouped_imgs, labels_dict, jaw_type_dict,
+        device, transform, strategy=strategy, n_best=BEST_N
+    )
+
     results = {}
-    
-    for strategy in strategies:
-        print(f"\n{'='*60}")
-        print(f"Testing Strategy: {strategy.value}")
-        print('='*60)
-        
-        preds, targets, ids, stats = test_model(
-            model, grouped_imgs, labels_dict, jaw_type_dict, 
-            device, transform, strategy=strategy, n_best=BEST_N
-        )
-        
-        if len(preds) > 0:
-            metrics = calculate_metrics(preds, targets, jaw_type_dict, ids)
-            results[strategy.value] = {
-                'metrics': metrics,
-                'stats': stats,
-                'preds': preds,
-                'targets': targets,
-                'ids': ids
-            }
-            
-            print(f"  Balanced Accuracy: {metrics['overall_micro']['balanced_accuracy']:.4f}")
-            print(f"  Macro F1: {metrics['overall_macro']['macro_f1']:.4f}")
-            print(f"  Macro Recall: {metrics['overall_macro']['macro_recall']:.4f}")
-            print(f"  Upper Jaw Acc: {metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
-            print(f"  Lower Jaw Acc: {metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
-    
+    if len(preds) > 0:
+        metrics = calculate_metrics(preds, targets, jaw_type_dict, ids)
+        results[strategy.value] = {
+            'metrics': metrics,
+            'stats': stats,
+            'preds': preds,
+            'targets': targets,
+            'ids': ids
+        }
+    else:
+        print("  [Warn] No predictions were produced for the fixed strategy.")
+
     return results
-
-def print_comparison_table(results, selection_metric='balanced_accuracy'):
-    print("\n" + "="*120)
-    print(" " * 45 + "FUSION STRATEGY COMPARISON")
-    print("="*120)
-    
-    header = f"{'Strategy':<25} {'Bal.Acc':<12} {'Macro F1':<12} {'Macro Rec':<12} {'Macro Prec':<12} {'Upper Acc':<12} {'Lower Acc':<12}"
-    print(f"\n{header}")
-    print("-"*120)
-    
-    best_value = -1
-    best_strategy = None
-    
-    for strategy, data in results.items():
-        m = data['metrics']
-        bal_acc = m['overall_micro']['balanced_accuracy']
-        macro_f1 = m['overall_macro']['macro_f1']
-        macro_rec = m['overall_macro']['macro_recall']
-        macro_prec = m['overall_macro']['macro_precision']
-        upper_acc = m['per_jaw']['upper_jaw_accuracy']
-        lower_acc = m['per_jaw']['lower_jaw_accuracy']
-        
-        metric_value = get_metric_value(m, selection_metric)
-        
-        if metric_value > best_value:
-            best_value = metric_value
-            best_strategy = strategy
-        
-        line = f"{strategy:<25} {bal_acc:<12.4f} {macro_f1:<12.4f} {macro_rec:<12.4f} {macro_prec:<12.4f} {upper_acc:<12.4f} {lower_acc:<12.4f}"
-        print(line)
-    
-    print("-"*120)
-    print(f"\n★ Best Strategy (by {selection_metric}): {best_strategy} ({best_value:.4f})")
-    print("="*120)
-    
-    return best_strategy
-
-def generate_comparison_plot(results, save_dir):
-    strategies = list(results.keys())
-    metrics_to_plot = ['balanced_accuracy', 'macro_f1', 'macro_recall', 'macro_precision']
-    
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    axes = axes.flatten()
-    
-    for i, metric in enumerate(metrics_to_plot):
-        values = []
-        for strategy in strategies:
-            m = results[strategy]['metrics']
-            if metric == 'balanced_accuracy':
-                values.append(m['overall_micro']['balanced_accuracy'])
-            elif metric == 'macro_f1':
-                values.append(m['overall_macro']['macro_f1'])
-            elif metric == 'macro_recall':
-                values.append(m['overall_macro']['macro_recall'])
-            elif metric == 'macro_precision':
-                values.append(m['overall_macro']['macro_precision'])
-        
-        bars = axes[i].bar(strategies, values, color='steelblue', alpha=0.8)
-        axes[i].set_title(metric.replace('_', ' ').title(), fontsize=12, fontweight='bold')
-        axes[i].set_ylabel('Score')
-        axes[i].set_ylim(0, 1.0)
-        axes[i].tick_params(axis='x', rotation=30)
-        
-        best_idx = np.argmax(values)
-        bars[best_idx].set_color('coral')
-        
-        for bar, val in zip(bars, values):
-            axes[i].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                        f'{val:.3f}', ha='center', va='bottom', fontsize=9)
-    
-    plt.suptitle('Augmented Model - Fusion Strategy Comparison', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    plt.savefig(Path(save_dir) / "fusion_strategy_comparison.png", dpi=150)
-    plt.close()
-    print(f" Comparison plot saved to {save_dir}/fusion_strategy_comparison.png")
 
 # =================================================================================
 # OUTPUT FUNCTIONS
@@ -570,7 +527,7 @@ def print_metrics_summary(metrics, strategy_name):
     per_jaw = metrics['per_jaw']
     
     print("\n" + "="*80)
-    print(f" "*15 + f"DETAILED METRICS FOR BEST STRATEGY: {strategy_name}")
+    print(" " * 15 + f"DETAILED METRICS FOR BEST STRATEGY: {strategy_name}")
     print("="*80)
     
     print(f"\n╔{'═'*78}╗")
@@ -711,7 +668,7 @@ def main():
     print(" "*5 + "AUGMENTED MODEL TESTING - MULTI-ANGLE FUSION")
     print("="*80)
     print(f" Model: {MODEL_PATH}")
-    print(f" Selection Metric: {SELECTION_METRIC}")
+    print(f" Fusion Strategy: {FIXED_STRATEGY.value}")
     print(" ")
     print("="*80)
     
@@ -753,21 +710,23 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    print(f"\n[5/6] Comparing all fusion strategies...")
-    results = compare_all_strategies(
+    print(f"\n[5/6] Running fixed fusion strategy: {FIXED_STRATEGY.value}...")
+    results = run_fixed_strategy(
         model, grouped_imgs, labels_dict, jaw_type_dict, device, transform
     )
-    
-    best_strategy = print_comparison_table(results, SELECTION_METRIC)
-    generate_comparison_plot(results, OUTPUT_DIR)
-    
+
+    if not results:
+        print(" No predictions produced. Exiting.")
+        return
+
+    best_strategy = FIXED_STRATEGY.value
     best_data = results[best_strategy]
     best_metrics = best_data['metrics']
     best_preds = best_data['preds']
     best_targets = best_data['targets']
     best_ids = best_data['ids']
     
-    print(f"\n[6/6] Generating detailed output for best strategy: {best_strategy}")
+    print(f"\n[6/6] Generating detailed output for strategy: {best_strategy}")
     print_metrics_summary(best_metrics, best_strategy)
     print_sample_predictions(best_ids, best_preds, best_targets, jaw_type_dict, NUM_SAMPLE_PREDICTIONS)
     generate_detailed_plots(best_metrics, best_preds, best_targets, OUTPUT_DIR, best_strategy)
@@ -775,24 +734,26 @@ def main():
     results_file = Path(OUTPUT_DIR) / "test_results.json"
     json_results = {
         'model': MODEL_PATH,
-        'selection_metric': SELECTION_METRIC,
+        'selection_metric': 'fixed_strategy',
         'best_strategy': best_strategy,
         'all_strategies': {}
     }
     
-    for strategy, data in results.items():
-        json_results['all_strategies'][strategy] = {
-            'metrics': {
-                'overall_micro': data['metrics']['overall_micro'],
-                'overall_macro': data['metrics']['overall_macro'],
-                'per_jaw': data['metrics']['per_jaw'],
-                'per_tooth': {str(k): v for k, v in data['metrics']['per_tooth'].items()}
-            },
-            'stats': {
-                'avg_angles_per_case': float(np.mean(data['stats']['num_angles_per_case'])),
-                'avg_confidence': float(np.mean(data['stats']['confidence_scores']))
-            }
+    # Save only the fixed-strategy results
+    strategy = best_strategy
+    data = results[strategy]
+    json_results['all_strategies'][strategy] = {
+        'metrics': {
+            'overall_micro': data['metrics']['overall_micro'],
+            'overall_macro': data['metrics']['overall_macro'],
+            'per_jaw': data['metrics']['per_jaw'],
+            'per_tooth': {str(k): v for k, v in data['metrics']['per_tooth'].items()}
+        },
+        'stats': {
+            'avg_angles_per_case': float(np.mean(data['stats']['num_angles_per_case'])) if data['stats']['num_angles_per_case'] else 0.0,
+            'avg_confidence': float(np.mean(data['stats']['confidence_scores'])) if data['stats']['confidence_scores'] else 0.0
         }
+    }
     
     with open(results_file, 'w') as f:
         json.dump(json_results, f, indent=2)
@@ -802,7 +763,7 @@ def main():
     print("\n" + "="*80)
     print(" "*30 + "SUMMARY")
     print("="*80)
-    print(f"  Best Strategy: {best_strategy}")
+    print(f"  Strategy: {best_strategy}")
     print(f"  Balanced Accuracy: {best_metrics['overall_micro']['balanced_accuracy']:.4f}")
     print(f"  Macro Recall: {best_metrics['overall_macro']['macro_recall']:.4f}")
     print(f"  Macro F1: {best_metrics['overall_macro']['macro_f1']:.4f}")

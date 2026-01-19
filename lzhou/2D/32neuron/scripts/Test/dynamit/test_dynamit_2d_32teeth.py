@@ -34,7 +34,7 @@ from torchvision.models import resnet18, resnet50
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 MODEL_PATH = "/home/user/lzhou/week15-32/output/Train2D/32teeth_dynamit/dynamit_best_2d_32teeth.pth"
-OUTPUT_DIR = "/home/user/lzhou/week15-32/output/Test2D/32teeth_dynamit_auto_best"
+OUTPUT_DIR = "/home/user/lzhou/week16-32/output/Test2D/32teeth_dynamit_auto_best"
 
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -50,6 +50,10 @@ SELECTION_METRIC = 'macro_f1'
 
 # For best_n_angles strategy
 BEST_N = 2
+ACTIVE_STRATEGIES = ["best_n_angles"]
+
+#  best_n_angles strategy
+FIXED_STRATEGY = 'best_n_angles'
 
 # FDI Notation
 VALID_FDI_LABELS = sorted([
@@ -767,10 +771,9 @@ def generate_detailed_plots(metrics, preds, targets, save_dir):
 # =================================================================================
 def main():
     print("\n" + "=" * 80)
-    print(" " * 10 + "2D MODEL TESTING - AUTO-SELECT BEST FUSION STRATEGY")
-    print(" " * 10 + "(Dynamic Loss Model)")
+    print(" " * 10 + "2D MODEL TESTING - Fixed Strategy (Dynamic Loss Model)")
     print("=" * 80)
-    print(f" Selection Metric: {SELECTION_METRIC}")
+    print(f" Strategy: {FIXED_STRATEGY}")
     print("=" * 80)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -815,68 +818,24 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    # Compare all strategies
-    print(f"\n[5/6] Comparing all fusion strategies...")
-    all_results = {}
+    # only run best_n_angles
+    print(f"\n[5/6] Running fixed fusion strategy: {FIXED_STRATEGY} ...")
+    preds, targets, ids = test_model_with_strategy(
+        model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, FIXED_STRATEGY
+    )
+    metrics = calculate_metrics(preds, targets, jaw_type_dict, ids)
     
-    for strategy_name in FUSION_STRATEGIES.keys():
-        print(f"\n{'='*60}")
-        print(f"Testing Strategy: {strategy_name}")
-        print(f"{'='*60}")
-        
-        preds, targets, ids = test_model_with_strategy(
-            model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, strategy_name
-        )
-        
-        metrics = calculate_metrics(preds, targets, jaw_type_dict, ids)
-        
-        all_results[strategy_name] = {
-            'preds': preds,
-            'targets': targets,
-            'ids': ids,
-            'metrics': metrics
-        }
-        
-        print(f"  Balanced Accuracy: {metrics['overall_micro']['balanced_accuracy']:.4f}")
-        print(f"  Macro F1: {metrics['overall_macro']['macro_f1']:.4f}")
-        print(f"  Macro Recall: {metrics['overall_macro']['macro_recall']:.4f}")
-        print(f"  Upper Jaw Acc: {metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
-        print(f"  Lower Jaw Acc: {metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
+    print(f"\n[6/6] Generating detailed output for strategy: {FIXED_STRATEGY}")
+    print_detailed_metrics(metrics, FIXED_STRATEGY)
+    print_sample_predictions(ids, preds, targets, jaw_type_dict, NUM_SAMPLE_PREDICTIONS)
+    generate_detailed_plots(metrics, preds, targets, OUTPUT_DIR)
     
-    # Print comparison and find best
-    best_strategy = print_strategy_comparison(all_results, SELECTION_METRIC)
-    
-    # Generate comparison plot
-    generate_comparison_plot(all_results, OUTPUT_DIR)
-    
-    # Detailed output for best strategy
-    print(f"\n[6/6] Generating detailed output for best strategy: {best_strategy}")
-    
-    best_result = all_results[best_strategy]
-    best_metrics = best_result['metrics']
-    best_preds = best_result['preds']
-    best_targets = best_result['targets']
-    best_ids = best_result['ids']
-    
-    print_detailed_metrics(best_metrics, best_strategy)
-    print_sample_predictions(best_ids, best_preds, best_targets, jaw_type_dict, NUM_SAMPLE_PREDICTIONS)
-    
-    # Generate detailed plots
-    generate_detailed_plots(best_metrics, best_preds, best_targets, OUTPUT_DIR)
-    
-    # Save all results to JSON
+    # save results
     results_to_save = {
-        'selection_metric': SELECTION_METRIC,
-        'best_strategy': best_strategy,
-        'all_strategies': {}
+        'strategy': FIXED_STRATEGY,
+        'metrics': metrics,
+        'per_tooth': {str(k): v for k, v in metrics['per_tooth'].items()}
     }
-    
-    for strategy_name, result in all_results.items():
-        metrics = result['metrics']
-        metrics_save = metrics.copy()
-        metrics_save['per_tooth'] = {str(k): v for k, v in metrics['per_tooth'].items()}
-        results_to_save['all_strategies'][strategy_name] = metrics_save
-    
     results_file = Path(OUTPUT_DIR) / "test_results_dynamit.json"
     with open(results_file, 'w') as f:
         json.dump(results_to_save, f, indent=2)
@@ -886,12 +845,12 @@ def main():
     print("\n" + "=" * 80)
     print(" " * 30 + "SUMMARY")
     print("=" * 80)
-    print(f"  Best Strategy: {best_strategy}")
-    print(f"  Balanced Accuracy: {best_metrics['overall_micro']['balanced_accuracy']:.4f}")
-    print(f"  Macro Recall: {best_metrics['overall_macro']['macro_recall']:.4f}")
-    print(f"  Macro F1: {best_metrics['overall_macro']['macro_f1']:.4f}")
-    print(f"  Upper Jaw Accuracy: {best_metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
-    print(f"  Lower Jaw Accuracy: {best_metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
+    print(f"  Strategy: {FIXED_STRATEGY}")
+    print(f"  Balanced Accuracy: {metrics['overall_micro']['balanced_accuracy']:.4f}")
+    print(f"  Macro Recall: {metrics['overall_macro']['macro_recall']:.4f}")
+    print(f"  Macro F1: {metrics['overall_macro']['macro_f1']:.4f}")
+    print(f"  Upper Jaw Accuracy: {metrics['per_jaw']['upper_jaw_accuracy']:.4f}")
+    print(f"  Lower Jaw Accuracy: {metrics['per_jaw']['lower_jaw_accuracy']:.4f}")
     print("=" * 80)
     print(" " * 30 + "DONE!")
     print("=" * 80)

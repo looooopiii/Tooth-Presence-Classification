@@ -35,8 +35,8 @@ IMG_ROOT_LOWER = "/home/user/lzhou/week15/render_output/train/lowerjaw"
 IMG_ROOT_UPPER = "/home/user/lzhou/week15/render_output/train/upperjaw"
 
 # Outputs
-OUTPUT_DIR = "/home/user/lzhou/week15-17/output/Train2D/16plus1teeth"
-PLOT_DIR = "/home/user/lzhou/week15-17/output/Train2D/16plus1teeth/plots"
+OUTPUT_DIR = "/home/user/lzhou/week16-17/output/Train2D/16plus1teeth"
+PLOT_DIR = "/home/user/lzhou/week16-17/output/Train2D/16plus1teeth/plots"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 Path(PLOT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +68,7 @@ LABEL_SMOOTHING = 0.1
 DROPOUT_RATE = 0.5
 
 # Macro metrics settings
-MACRO_SUPPORT_MIN = 5  # Only include positions with >= this many positives
+MACRO_SUPPORT_MIN = 1  # Only include positions with >= this many positives
 
 # Threshold tuning
 THRESHOLD_STRATEGY = "per_position"  # "fixed" or "per_position"

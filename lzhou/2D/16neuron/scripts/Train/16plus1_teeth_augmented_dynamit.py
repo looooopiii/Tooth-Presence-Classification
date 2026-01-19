@@ -39,15 +39,15 @@ IMG_ROOT_LOWER = "/home/user/lzhou/week15/render_output/train/lowerjaw"
 IMG_ROOT_UPPER = "/home/user/lzhou/week15/render_output/train/upperjaw"
 
 # CSV files
-AUGMENTED_CSV = "/home/user/lzhou/week10/output/augment_test/train_labels_augmented.csv"
-RANDOM_CSV = "/home/user/lzhou/week10/output/augment_random/train_labels_random.csv"
+AUGMENTED_CSV = "/home/user/lzhou/week16/Aug/augment_test/train_labels_augmented.csv"
+RANDOM_CSV = "/home/user/lzhou/week16/Aug/augment_random/train_labels_random.csv"
 
 # Rendered image directories
-RENDER_ROOT = "/home/user/lzhou/week15/render_output/render_aug_random"
-RENDER_ROOT_TEST = "/home/user/lzhou/week15/render_output/render_aug_test"
+RENDER_ROOT = "/home/user/lzhou/week16/output/renderAug/render_aug_random"
+RENDER_ROOT_TEST = "/home/user/lzhou/week16/output/renderAug/render_aug_test"
 
 # Output directories
-OUTPUT_DIR = "/home/user/lzhou/week15-17/output/Train2D/Augmented_16plus1teeth_dynamit"
+OUTPUT_DIR = "/home/user/lzhou/week16-17/output/Train2D/Augmented_16plus1teeth_dynamit"
 PLOT_DIR = f"{OUTPUT_DIR}/plots"
 
 # Model filenames
@@ -331,7 +331,7 @@ class DynamitLoss16Plus1(nn.Module):
         
         # Combined loss (weighted)
         total_loss = 0.8 * teeth_loss + 0.2 * jaw_loss
-        
+
         return total_loss
 
 
