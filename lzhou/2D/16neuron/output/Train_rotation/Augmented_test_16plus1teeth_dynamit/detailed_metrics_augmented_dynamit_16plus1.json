@@ -1,0 +1,399 @@
+{
+  "overall_metrics": {
+    "missing_precision": 0.8691629955947137,
+    "missing_recall": 0.914696337505795,
+    "missing_f1": 0.8913485430313982,
+    "missing_accuracy": 0.9456374321880651,
+    "missing_balanced_accuracy": 0.93515417682344,
+    "missing_pr_auc_micro": 0.9468113751422038,
+    "missing_pr_auc_macro": 0.8360374543605,
+    "jaw_precision": 1.0,
+    "jaw_recall": 0.9962121212121212,
+    "jaw_f1": 0.9981024667931688,
+    "jaw_accuracy": 0.9981916817359855
+  },
+  "macro_metrics": {
+    "macro_precision": 0.8004164938734086,
+    "macro_recall": 0.8445845309441782,
+    "macro_f1": 0.812522374054409,
+    "macro_accuracy": 0.945736014994233,
+    "macro_support_min": 0,
+    "macro_positions_per_jaw": 16,
+    "macro_jaws_included": 2
+  },
+  "per_jaw_macro": {
+    "upper": {
+      "macro_precision": 0.7906081531610394,
+      "macro_recall": 0.8681514406094943,
+      "macro_f1": 0.8182512760545078,
+      "macro_accuracy": 0.9435553633217993,
+      "macro_positions": 16
+    },
+    "lower": {
+      "macro_precision": 0.8102248345857779,
+      "macro_recall": 0.821017621278862,
+      "macro_f1": 0.8067934720543101,
+      "macro_accuracy": 0.9479166666666666,
+      "macro_positions": 16
+    }
+  },
+  "per_position_metrics": {
+    "Upper_18": {
+      "position": 0,
+      "fdi": 18,
+      "jaw": "upper",
+      "precision": 0.9858156028368794,
+      "recall": 1.0,
+      "f1": 0.9928571428571429,
+      "accuracy": 0.986159169550173,
+      "support": 278
+    },
+    "Lower_48": {
+      "position": 0,
+      "fdi": 48,
+      "jaw": "lower",
+      "precision": 0.9573643410852714,
+      "recall": 0.9959677419354839,
+      "f1": 0.9762845849802372,
+      "accuracy": 0.9545454545454546,
+      "support": 248
+    },
+    "Upper_17": {
+      "position": 1,
+      "fdi": 17,
+      "jaw": "upper",
+      "precision": 0.8932038834951457,
+      "recall": 0.9108910891089109,
+      "f1": 0.9019607843137255,
+      "accuracy": 0.9307958477508651,
+      "support": 101
+    },
+    "Lower_47": {
+      "position": 1,
+      "fdi": 47,
+      "jaw": "lower",
+      "precision": 0.8586956521739131,
+      "recall": 0.8977272727272727,
+      "f1": 0.8777777777777778,
+      "accuracy": 0.9166666666666666,
+      "support": 88
+    },
+    "Upper_16": {
+      "position": 2,
+      "fdi": 16,
+      "jaw": "upper",
+      "precision": 0.8947368421052632,
+      "recall": 0.7727272727272727,
+      "f1": 0.8292682926829268,
+      "accuracy": 0.9757785467128027,
+      "support": 22
+    },
+    "Lower_46": {
+      "position": 2,
+      "fdi": 46,
+      "jaw": "lower",
+      "precision": 1.0,
+      "recall": 0.6956521739130435,
+      "f1": 0.8205128205128205,
+      "accuracy": 0.9734848484848485,
+      "support": 23
+    },
+    "Upper_15": {
+      "position": 3,
+      "fdi": 15,
+      "jaw": "upper",
+      "precision": 0.8387096774193549,
+      "recall": 0.7878787878787878,
+      "f1": 0.8125,
+      "accuracy": 0.9584775086505191,
+      "support": 33
+    },
+    "Lower_45": {
+      "position": 3,
+      "fdi": 45,
+      "jaw": "lower",
+      "precision": 0.7297297297297297,
+      "recall": 0.7714285714285715,
+      "f1": 0.75,
+      "accuracy": 0.9318181818181818,
+      "support": 35
+    },
+    "Upper_14": {
+      "position": 4,
+      "fdi": 14,
+      "jaw": "upper",
+      "precision": 0.75,
+      "recall": 0.84375,
+      "f1": 0.7941176470588235,
+      "accuracy": 0.9515570934256056,
+      "support": 32
+    },
+    "Lower_44": {
+      "position": 4,
+      "fdi": 44,
+      "jaw": "lower",
+      "precision": 0.8125,
+      "recall": 0.8387096774193549,
+      "f1": 0.8253968253968254,
+      "accuracy": 0.9583333333333334,
+      "support": 31
+    },
+    "Upper_13": {
+      "position": 5,
+      "fdi": 13,
+      "jaw": "upper",
+      "precision": 0.7391304347826086,
+      "recall": 0.7727272727272727,
+      "f1": 0.7555555555555555,
+      "accuracy": 0.9238754325259516,
+      "support": 44
+    },
+    "Lower_43": {
+      "position": 5,
+      "fdi": 43,
+      "jaw": "lower",
+      "precision": 0.8,
+      "recall": 0.64,
+      "f1": 0.7111111111111111,
+      "accuracy": 0.9507575757575758,
+      "support": 25
+    },
+    "Upper_12": {
+      "position": 6,
+      "fdi": 12,
+      "jaw": "upper",
+      "precision": 0.5084745762711864,
+      "recall": 0.9375,
+      "f1": 0.6593406593406593,
+      "accuracy": 0.8927335640138409,
+      "support": 32
+    },
+    "Lower_42": {
+      "position": 6,
+      "fdi": 42,
+      "jaw": "lower",
+      "precision": 0.5333333333333333,
+      "recall": 0.8275862068965517,
+      "f1": 0.6486486486486487,
+      "accuracy": 0.9015151515151515,
+      "support": 29
+    },
+    "Upper_11": {
+      "position": 7,
+      "fdi": 11,
+      "jaw": "upper",
+      "precision": 0.7,
+      "recall": 0.9655172413793104,
+      "f1": 0.8115942028985508,
+      "accuracy": 0.9550173010380623,
+      "support": 29
+    },
+    "Lower_41": {
+      "position": 7,
+      "fdi": 41,
+      "jaw": "lower",
+      "precision": 0.625,
+      "recall": 0.8928571428571429,
+      "f1": 0.7352941176470589,
+      "accuracy": 0.9318181818181818,
+      "support": 28
+    },
+    "Upper_21": {
+      "position": 8,
+      "fdi": 21,
+      "jaw": "upper",
+      "precision": 0.5106382978723404,
+      "recall": 0.96,
+      "f1": 0.6666666666666666,
+      "accuracy": 0.916955017301038,
+      "support": 25
+    },
+    "Lower_31": {
+      "position": 8,
+      "fdi": 31,
+      "jaw": "lower",
+      "precision": 0.7,
+      "recall": 0.8076923076923077,
+      "f1": 0.75,
+      "accuracy": 0.946969696969697,
+      "support": 26
+    },
+    "Upper_22": {
+      "position": 9,
+      "fdi": 22,
+      "jaw": "upper",
+      "precision": 0.7575757575757576,
+      "recall": 0.7575757575757576,
+      "f1": 0.7575757575757576,
+      "accuracy": 0.9446366782006921,
+      "support": 33
+    },
+    "Lower_32": {
+      "position": 9,
+      "fdi": 32,
+      "jaw": "lower",
+      "precision": 0.6363636363636364,
+      "recall": 0.7777777777777778,
+      "f1": 0.7,
+      "accuracy": 0.9545454545454546,
+      "support": 18
+    },
+    "Upper_23": {
+      "position": 10,
+      "fdi": 23,
+      "jaw": "upper",
+      "precision": 0.7,
+      "recall": 0.875,
+      "f1": 0.7777777777777778,
+      "accuracy": 0.916955017301038,
+      "support": 48
+    },
+    "Lower_33": {
+      "position": 10,
+      "fdi": 33,
+      "jaw": "lower",
+      "precision": 0.7741935483870968,
+      "recall": 0.8888888888888888,
+      "f1": 0.8275862068965517,
+      "accuracy": 0.9621212121212122,
+      "support": 27
+    },
+    "Upper_24": {
+      "position": 11,
+      "fdi": 24,
+      "jaw": "upper",
+      "precision": 0.8157894736842105,
+      "recall": 0.8611111111111112,
+      "f1": 0.8378378378378378,
+      "accuracy": 0.9584775086505191,
+      "support": 36
+    },
+    "Lower_34": {
+      "position": 11,
+      "fdi": 34,
+      "jaw": "lower",
+      "precision": 0.8181818181818182,
+      "recall": 0.84375,
+      "f1": 0.8307692307692308,
+      "accuracy": 0.9583333333333334,
+      "support": 32
+    },
+    "Upper_25": {
+      "position": 12,
+      "fdi": 25,
+      "jaw": "upper",
+      "precision": 0.8484848484848485,
+      "recall": 0.7368421052631579,
+      "f1": 0.7887323943661971,
+      "accuracy": 0.9480968858131488,
+      "support": 38
+    },
+    "Lower_35": {
+      "position": 12,
+      "fdi": 35,
+      "jaw": "lower",
+      "precision": 0.95,
+      "recall": 0.6551724137931034,
+      "f1": 0.7755102040816326,
+      "accuracy": 0.9583333333333334,
+      "support": 29
+    },
+    "Upper_26": {
+      "position": 13,
+      "fdi": 26,
+      "jaw": "upper",
+      "precision": 0.9032258064516129,
+      "recall": 0.8484848484848485,
+      "f1": 0.875,
+      "accuracy": 0.972318339100346,
+      "support": 33
+    },
+    "Lower_36": {
+      "position": 13,
+      "fdi": 36,
+      "jaw": "lower",
+      "precision": 0.8823529411764706,
+      "recall": 0.75,
+      "f1": 0.8108108108108109,
+      "accuracy": 0.9734848484848485,
+      "support": 20
+    },
+    "Upper_27": {
+      "position": 14,
+      "fdi": 27,
+      "jaw": "upper",
+      "precision": 0.8148148148148148,
+      "recall": 0.8712871287128713,
+      "f1": 0.8421052631578947,
+      "accuracy": 0.8858131487889274,
+      "support": 101
+    },
+    "Lower_37": {
+      "position": 14,
+      "fdi": 37,
+      "jaw": "lower",
+      "precision": 0.9058823529411765,
+      "recall": 0.8651685393258427,
+      "f1": 0.8850574712643678,
+      "accuracy": 0.9242424242424242,
+      "support": 89
+    },
+    "Upper_28": {
+      "position": 15,
+      "fdi": 28,
+      "jaw": "upper",
+      "precision": 0.9891304347826086,
+      "recall": 0.9891304347826086,
+      "f1": 0.9891304347826086,
+      "accuracy": 0.9792387543252595,
+      "support": 276
+    },
+    "Lower_38": {
+      "position": 15,
+      "fdi": 38,
+      "jaw": "lower",
+      "precision": 0.98,
+      "recall": 0.9879032258064516,
+      "f1": 0.9839357429718876,
+      "accuracy": 0.9696969696969697,
+      "support": 248
+    }
+  },
+  "best_teeth_thresholds": [
+    0.5,
+    0.699999988079071,
+    0.4000000059604645,
+    0.30000001192092896,
+    0.6499999761581421,
+    0.75,
+    0.44999998807907104,
+    0.550000011920929,
+    0.6000000238418579,
+    0.75,
+    0.44999998807907104,
+    0.44999998807907104,
+    0.550000011920929,
+    0.25,
+    0.699999988079071,
+    0.949999988079071
+  ],
+  "training_config": {
+    "loss_function": "DynamitLoss16Plus1",
+    "num_teeth_positions": 16,
+    "num_outputs": 17,
+    "use_original": true,
+    "use_augmented": true,
+    "use_random": false,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.05,
+    "dropout_rate": 0.5,
+    "batch_size": 32,
+    "macro_support_min": 0,
+    "early_stopping_patience": 10,
+    "min_delta": 0.001,
+    "early_stopping_metric": "val_pr_auc_macro",
+    "threshold_strategy": "per_position",
+    "fixed_teeth_threshold": 0.5,
+    "jaw_threshold": 0.5
+  }
+}

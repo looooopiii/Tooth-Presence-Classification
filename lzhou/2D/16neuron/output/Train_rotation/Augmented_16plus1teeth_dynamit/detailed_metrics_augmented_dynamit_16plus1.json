@@ -1,0 +1,399 @@
+{
+  "overall_metrics": {
+    "missing_precision": 0.970334928229665,
+    "missing_recall": 0.9629629629629629,
+    "missing_f1": 0.9666348903717826,
+    "missing_accuracy": 0.9791996830427893,
+    "missing_balanced_accuracy": 0.9747782956662876,
+    "missing_pr_auc_micro": 0.989918916484967,
+    "missing_pr_auc_macro": 0.9843845637429884,
+    "jaw_precision": 1.0,
+    "jaw_recall": 0.995253164556962,
+    "jaw_f1": 0.9976209357652657,
+    "jaw_accuracy": 0.9976228209191759
+  },
+  "macro_metrics": {
+    "macro_precision": 0.9627333253326891,
+    "macro_recall": 0.9497394684547905,
+    "macro_f1": 0.9558562538597888,
+    "macro_accuracy": 0.9792019853827607,
+    "macro_support_min": 0,
+    "macro_positions_per_jaw": 16,
+    "macro_jaws_included": 2
+  },
+  "per_jaw_macro": {
+    "upper": {
+      "macro_precision": 0.9663903288420409,
+      "macro_recall": 0.9552840781966925,
+      "macro_f1": 0.960483850915958,
+      "macro_accuracy": 0.980654761904762,
+      "macro_positions": 16
+    },
+    "lower": {
+      "macro_precision": 0.9590763218233374,
+      "macro_recall": 0.9441948587128886,
+      "macro_f1": 0.9512286568036195,
+      "macro_accuracy": 0.9777492088607596,
+      "macro_positions": 16
+    }
+  },
+  "per_position_metrics": {
+    "Upper_18": {
+      "position": 0,
+      "fdi": 18,
+      "jaw": "upper",
+      "precision": 0.9901153212520593,
+      "recall": 0.9983388704318937,
+      "f1": 0.9942100909842845,
+      "accuracy": 0.9888888888888889,
+      "support": 602
+    },
+    "Lower_48": {
+      "position": 0,
+      "fdi": 48,
+      "jaw": "lower",
+      "precision": 0.9883720930232558,
+      "recall": 0.9900166389351082,
+      "f1": 0.9891936824605154,
+      "accuracy": 0.9794303797468354,
+      "support": 601
+    },
+    "Upper_17": {
+      "position": 1,
+      "fdi": 17,
+      "jaw": "upper",
+      "precision": 0.9316239316239316,
+      "recall": 0.9646017699115044,
+      "f1": 0.9478260869565217,
+      "accuracy": 0.9619047619047619,
+      "support": 226
+    },
+    "Lower_47": {
+      "position": 1,
+      "fdi": 47,
+      "jaw": "lower",
+      "precision": 0.9547738693467337,
+      "recall": 0.9359605911330049,
+      "f1": 0.945273631840796,
+      "accuracy": 0.9651898734177216,
+      "support": 203
+    },
+    "Upper_16": {
+      "position": 2,
+      "fdi": 16,
+      "jaw": "upper",
+      "precision": 0.9145299145299145,
+      "recall": 0.9553571428571429,
+      "f1": 0.9344978165938864,
+      "accuracy": 0.9761904761904762,
+      "support": 112
+    },
+    "Lower_46": {
+      "position": 2,
+      "fdi": 46,
+      "jaw": "lower",
+      "precision": 0.9193548387096774,
+      "recall": 0.926829268292683,
+      "f1": 0.9230769230769231,
+      "accuracy": 0.9699367088607594,
+      "support": 123
+    },
+    "Upper_15": {
+      "position": 3,
+      "fdi": 15,
+      "jaw": "upper",
+      "precision": 0.9666666666666667,
+      "recall": 0.8656716417910447,
+      "f1": 0.9133858267716536,
+      "accuracy": 0.9650793650793651,
+      "support": 134
+    },
+    "Lower_45": {
+      "position": 3,
+      "fdi": 45,
+      "jaw": "lower",
+      "precision": 0.9741379310344828,
+      "recall": 0.875968992248062,
+      "f1": 0.9224489795918367,
+      "accuracy": 0.9699367088607594,
+      "support": 129
+    },
+    "Upper_14": {
+      "position": 4,
+      "fdi": 14,
+      "jaw": "upper",
+      "precision": 0.9705882352941176,
+      "recall": 0.9428571428571428,
+      "f1": 0.9565217391304348,
+      "accuracy": 0.9809523809523809,
+      "support": 140
+    },
+    "Lower_44": {
+      "position": 4,
+      "fdi": 44,
+      "jaw": "lower",
+      "precision": 0.9473684210526315,
+      "recall": 0.9557522123893806,
+      "f1": 0.9515418502202643,
+      "accuracy": 0.9825949367088608,
+      "support": 113
+    },
+    "Upper_13": {
+      "position": 5,
+      "fdi": 13,
+      "jaw": "upper",
+      "precision": 0.96,
+      "recall": 0.9290322580645162,
+      "f1": 0.9442622950819672,
+      "accuracy": 0.973015873015873,
+      "support": 155
+    },
+    "Lower_43": {
+      "position": 5,
+      "fdi": 43,
+      "jaw": "lower",
+      "precision": 0.96875,
+      "recall": 0.9393939393939394,
+      "f1": 0.9538461538461539,
+      "accuracy": 0.9810126582278481,
+      "support": 132
+    },
+    "Upper_12": {
+      "position": 6,
+      "fdi": 12,
+      "jaw": "upper",
+      "precision": 0.9692307692307692,
+      "recall": 0.9333333333333333,
+      "f1": 0.9509433962264151,
+      "accuracy": 0.9793650793650793,
+      "support": 135
+    },
+    "Lower_42": {
+      "position": 6,
+      "fdi": 42,
+      "jaw": "lower",
+      "precision": 0.9537037037037037,
+      "recall": 0.944954128440367,
+      "f1": 0.9493087557603687,
+      "accuracy": 0.9825949367088608,
+      "support": 109
+    },
+    "Upper_11": {
+      "position": 7,
+      "fdi": 11,
+      "jaw": "upper",
+      "precision": 0.9846153846153847,
+      "recall": 0.9922480620155039,
+      "f1": 0.9884169884169884,
+      "accuracy": 0.9952380952380953,
+      "support": 129
+    },
+    "Lower_41": {
+      "position": 7,
+      "fdi": 41,
+      "jaw": "lower",
+      "precision": 0.968503937007874,
+      "recall": 0.9609375,
+      "f1": 0.9647058823529412,
+      "accuracy": 0.9857594936708861,
+      "support": 128
+    },
+    "Upper_21": {
+      "position": 8,
+      "fdi": 21,
+      "jaw": "upper",
+      "precision": 0.9911504424778761,
+      "recall": 0.9911504424778761,
+      "f1": 0.9911504424778761,
+      "accuracy": 0.9968253968253968,
+      "support": 113
+    },
+    "Lower_31": {
+      "position": 8,
+      "fdi": 31,
+      "jaw": "lower",
+      "precision": 0.9318181818181818,
+      "recall": 0.9919354838709677,
+      "f1": 0.9609375,
+      "accuracy": 0.9841772151898734,
+      "support": 124
+    },
+    "Upper_22": {
+      "position": 9,
+      "fdi": 22,
+      "jaw": "upper",
+      "precision": 0.9655172413793104,
+      "recall": 0.9655172413793104,
+      "f1": 0.9655172413793104,
+      "accuracy": 0.9873015873015873,
+      "support": 116
+    },
+    "Lower_32": {
+      "position": 9,
+      "fdi": 32,
+      "jaw": "lower",
+      "precision": 0.9655172413793104,
+      "recall": 0.9739130434782609,
+      "f1": 0.9696969696969697,
+      "accuracy": 0.9889240506329114,
+      "support": 115
+    },
+    "Upper_23": {
+      "position": 10,
+      "fdi": 23,
+      "jaw": "upper",
+      "precision": 1.0,
+      "recall": 0.9420289855072463,
+      "f1": 0.9701492537313433,
+      "accuracy": 0.9873015873015873,
+      "support": 138
+    },
+    "Lower_33": {
+      "position": 10,
+      "fdi": 33,
+      "jaw": "lower",
+      "precision": 0.9663865546218487,
+      "recall": 0.92,
+      "f1": 0.9426229508196722,
+      "accuracy": 0.9778481012658228,
+      "support": 125
+    },
+    "Upper_24": {
+      "position": 11,
+      "fdi": 24,
+      "jaw": "upper",
+      "precision": 0.9726027397260274,
+      "recall": 0.9659863945578231,
+      "f1": 0.9692832764505119,
+      "accuracy": 0.9857142857142858,
+      "support": 147
+    },
+    "Lower_34": {
+      "position": 11,
+      "fdi": 34,
+      "jaw": "lower",
+      "precision": 0.9453125,
+      "recall": 0.952755905511811,
+      "f1": 0.9490196078431372,
+      "accuracy": 0.9794303797468354,
+      "support": 127
+    },
+    "Upper_25": {
+      "position": 12,
+      "fdi": 25,
+      "jaw": "upper",
+      "precision": 0.9558823529411765,
+      "recall": 0.9219858156028369,
+      "f1": 0.9386281588447654,
+      "accuracy": 0.973015873015873,
+      "support": 141
+    },
+    "Lower_35": {
+      "position": 12,
+      "fdi": 35,
+      "jaw": "lower",
+      "precision": 0.9596774193548387,
+      "recall": 0.8814814814814815,
+      "f1": 0.918918918918919,
+      "accuracy": 0.9667721518987342,
+      "support": 135
+    },
+    "Upper_26": {
+      "position": 13,
+      "fdi": 26,
+      "jaw": "upper",
+      "precision": 0.952,
+      "recall": 0.952,
+      "f1": 0.952,
+      "accuracy": 0.9809523809523809,
+      "support": 125
+    },
+    "Lower_36": {
+      "position": 13,
+      "fdi": 36,
+      "jaw": "lower",
+      "precision": 0.9666666666666667,
+      "recall": 0.9354838709677419,
+      "f1": 0.9508196721311475,
+      "accuracy": 0.9810126582278481,
+      "support": 124
+    },
+    "Upper_27": {
+      "position": 14,
+      "fdi": 27,
+      "jaw": "upper",
+      "precision": 0.9459459459459459,
+      "recall": 0.967741935483871,
+      "f1": 0.9567198177676538,
+      "accuracy": 0.9698412698412698,
+      "support": 217
+    },
+    "Lower_37": {
+      "position": 14,
+      "fdi": 37,
+      "jaw": "lower",
+      "precision": 0.9414893617021277,
+      "recall": 0.9267015706806283,
+      "f1": 0.9340369393139841,
+      "accuracy": 0.9604430379746836,
+      "support": 191
+    },
+    "Upper_28": {
+      "position": 15,
+      "fdi": 28,
+      "jaw": "upper",
+      "precision": 0.9917763157894737,
+      "recall": 0.996694214876033,
+      "f1": 0.9942291838417148,
+      "accuracy": 0.9888888888888889,
+      "support": 605
+    },
+    "Lower_38": {
+      "position": 15,
+      "fdi": 38,
+      "jaw": "lower",
+      "precision": 0.9933884297520661,
+      "recall": 0.9950331125827815,
+      "f1": 0.9942100909842845,
+      "accuracy": 0.9889240506329114,
+      "support": 604
+    }
+  },
+  "best_teeth_thresholds": [
+    0.6499999761581421,
+    0.6499999761581421,
+    0.3499999940395355,
+    0.949999988079071,
+    0.550000011920929,
+    0.75,
+    0.550000011920929,
+    0.699999988079071,
+    0.75,
+    0.6000000238418579,
+    0.6499999761581421,
+    0.30000001192092896,
+    0.8999999761581421,
+    0.44999998807907104,
+    0.6000000238418579,
+    0.4000000059604645
+  ],
+  "training_config": {
+    "loss_function": "DynamitLoss16Plus1",
+    "num_teeth_positions": 16,
+    "num_outputs": 17,
+    "use_original": true,
+    "use_augmented": true,
+    "use_random": true,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.05,
+    "dropout_rate": 0.5,
+    "batch_size": 32,
+    "macro_support_min": 0,
+    "early_stopping_patience": 10,
+    "min_delta": 0.001,
+    "early_stopping_metric": "val_pr_auc_macro",
+    "threshold_strategy": "per_position",
+    "fixed_teeth_threshold": 0.5,
+    "jaw_threshold": 0.5
+  }
+}
