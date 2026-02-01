@@ -20,10 +20,10 @@ from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 import json
 
-# ==================== Dataset Training Configuration ====================
+# Dataset Training
 USE_ORIGINAL = True   # if use original dataset
-USE_AUGMENTED = True  # if use augmented dataset (2400 samples)
-USE_RANDOM = True     # if use random augmented (3600 samples)
+USE_AUGMENTED = True  # if use augmented dataset
+USE_RANDOM = True     # if use random augmented
 
 # Original dataset roots
 # 3D JSON label roots
@@ -52,7 +52,7 @@ LAST_MODEL_FILENAME = "augmented_dynamit_last_2d_32teeth.pth"
 PLOT_FILENAME = "training_metrics_dynamit.png"
 METRICS_FILENAME = "detailed_metrics_dynamit.json"
 
-# ==================== Training ====================
+# Training
 BATCH_SIZE = 32
 NUM_EPOCHS = 50
 LEARNING_RATE = 5e-4
@@ -60,7 +60,7 @@ WEIGHT_DECAY = 0.05
 IMG_SIZE = 256
 NUM_TEETH = 32
 SEED = 41
-BACKBONE = "resnet18"  # or "resnet50"
+BACKBONE = "resnet18"
 
 # Early stopping
 EARLY_STOPPING_PATIENCE = 10
@@ -79,8 +79,6 @@ INDEX_TO_FDI = {i: fdi for fdi, i in FDI_TO_INDEX.items()}
 # GPU config
 available_gpus = []
 device = None
-# =======================================================
-
 
 def get_free_gpus(threshold_mb=1000, max_gpus=2):
     """Get free GPU indices"""
@@ -187,25 +185,9 @@ def build_original_samples(img_roots, json_roots):
     return samples
 
 
-# ==================== Dataset Class ====================
+# Dataset Class
 class AugmentedToothDataset(Dataset):
-    """
-    reads tooth presence labels from CSV and loads rendered PNG images.
-    CSV:
-    - filename: OBJ file name
-    - new_id: case ID
-    - 11, 12, ..., 48: each tooth's label (1=missing, 0=present)
-
-    PNG file naming conventions:
-    - {render_root}/{jaw_type}/{case_id}_top.png
-    """
     def __init__(self, csv_paths, render_root, transform=None):
-        """
-        Args:
-            csv_paths: List of CSV file paths
-            render_root: Root directory (or list of roots) for rendered PNG images
-            transform: torchvision transforms
-        """
         self.samples = []
         self.transform = transform
         if isinstance(render_root, (list, tuple, set)):
@@ -325,7 +307,7 @@ class AugmentedToothDataset(Dataset):
         return img, labels, sample['jaw_type']
 
 
-# ==================== Model ====================
+# Model
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -355,12 +337,8 @@ class ResNetMultiLabel(nn.Module):
         return self.classifier(features)
 
 
-# ==================== Loss Function (DYNAMIT) ====================
+# Loss Function (DYNAMIT)
 class Dynamit_Loss(nn.Module):
-    """
-    Dynamit Loss: Dynamic weighting based on class imbalance.
-    Numerically stable version that avoids UserWarning.
-    """
     def __init__(self):
         super(Dynamit_Loss, self).__init__()
 
@@ -380,7 +358,7 @@ class Dynamit_Loss(nn.Module):
         return F.binary_cross_entropy_with_logits(predictions, targets, weight=weights)
 
 
-# ==================== Metrics ====================
+# Metrics
 def calculate_micro_metrics(pred, target):
     """Calculate micro-averaged metrics"""
     pred_np = (pred > 0.5).cpu().numpy().astype(int)
@@ -439,7 +417,7 @@ def calculate_per_tooth_metrics(pred, target, num_teeth=32):
     }
 
 
-# ==================== Training ====================
+# Training
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -499,7 +477,7 @@ def validate(model, dataloader, criterion, device):
     }, all_preds, all_labels
 
 
-# ==================== Plotting ====================
+# Plotting
 def plot_training_curves(history, save_dir, filename):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
@@ -550,7 +528,7 @@ def plot_training_curves(history, save_dir, filename):
     print(f"\n✓ Training plots saved to: {save_path}")
 
 
-# ==================== Custom Collate ====================
+# Custom Collate
 def collate_fn(batch):
     imgs = torch.stack([item[0] for item in batch])
     labels = torch.stack([item[1] for item in batch])
@@ -558,7 +536,7 @@ def collate_fn(batch):
     return imgs, labels, jaw_types
 
 
-# ==================== MAIN ====================
+# MAIN
 def main():
     global available_gpus, device
     set_seed(SEED)
@@ -626,11 +604,11 @@ def main():
     
     if len(full_dataset) == 0:
         print(" ERROR: Dataset is empty! Please check:")
-        print(f"   1. Augmented PNG images in: {RENDER_ROOT}/upper/, {RENDER_ROOT}/lower/, "
+        print(f"   Augmented PNG images in: {RENDER_ROOT}/upper/, {RENDER_ROOT}/lower/, "
               f"{RENDER_ROOT_TEST}/upper/, {RENDER_ROOT_TEST}/lower/")
-        print(f"   2. Original PNG images in: {IMG_ROOT_LOWER}, {IMG_ROOT_UPPER}")
-        print(f"   3. JSON labels in: {JSON_ROOT_LOWER}, {JSON_ROOT_UPPER}")
-        print(f"   4. Image naming: case_id_top.png")
+        print(f"   Original PNG images in: {IMG_ROOT_LOWER}, {IMG_ROOT_UPPER}")
+        print(f"   JSON labels in: {JSON_ROOT_LOWER}, {JSON_ROOT_UPPER}")
+        print(f"   Image naming: case_id_top.png")
         return
 
     print("\n[1.5/5] Performing train/val split...")
@@ -694,9 +672,8 @@ def main():
     if len(available_gpus) > 1:
         model = torch.nn.DataParallel(model, device_ids=available_gpus)
 
-    # ========== KEY DIFFERENCE: Dynamit Loss instead of BCE ==========
+    # KEY DIFFERENCE: Dynamit Loss instead of BCE
     criterion = Dynamit_Loss()
-    # =================================================================
     
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=3)

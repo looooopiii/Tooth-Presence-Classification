@@ -1,14 +1,11 @@
 import pandas as pd
 from pathlib import Path
 
-# ============= CONFIGURATION =============
-# --- Path to the CSV file you want to validate ---
+# CONFIGURATION
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 
-# --- Label convention of the CSV ---
-# Your CSV has flipped labels, so a 'present' tooth is marked with 0.
+# Label convention of the CSV
 VALUE_FOR_PRESENT = 0
-# =========================================
 
 # FDI Tooth Notation
 UPPER_TEETH_STR = [str(t) for t in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]]
@@ -20,7 +17,7 @@ def validate_jaw_alignment(csv_path):
     Scans the entire CSV to find rows where a tooth is marked as 'present'
     in an arch where it cannot physically exist.
     """
-    print(f"--- VALIDATING JAW ALIGNMENT FOR: {Path(csv_path).name} ---")
+    print(f" VALIDATING JAW ALIGNMENT FOR: {Path(csv_path).name}")
     
     try:
         df = pd.read_csv(csv_path)
@@ -62,7 +59,7 @@ def validate_jaw_alignment(csv_path):
                 'misaligned_teeth_present': misaligned_teeth
             })
 
-    # --- Print Summary Report ---
+    # Print Summary Report
     if not misaligned_rows:
         print("\nSUCCESS: No misaligned entries found. All labels are consistent with their jaw types.")
     else:
@@ -74,7 +71,7 @@ def validate_jaw_alignment(csv_path):
             print(f"  Scan Jaw Type: {entry['scan_jaw']}")
             print(f"  Incorrectly Marked as 'PRESENT': {entry['misaligned_teeth_present']}")
     
-    print("\n--- VALIDATION COMPLETE ---")
+    print("\nVALIDATION COMPLETE")
 
 
 if __name__ == "__main__":

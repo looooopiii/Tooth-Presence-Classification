@@ -19,7 +19,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# ==================== CONFIGURATION ====================
+# CONFIGURATION
 # 3D JSON label roots
 JSON_ROOT_LOWER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower"
 JSON_ROOT_UPPER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
@@ -39,7 +39,7 @@ LAST_MODEL_FILENAME = "baseline_bce_last_2d_32teeth.pth"
 PLOT_FILENAME = "training_metrics_32teeth.png"
 METRICS_FILENAME = "detailed_metrics_32teeth.json"
 
-# ==================== super parameters ====================
+# super parameters
 BATCH_SIZE = 16
 NUM_EPOCHS = 35
 LEARNING_RATE = 5e-4
@@ -53,7 +53,7 @@ BACKBONE = "resnet18"
 EARLY_STOPPING_PATIENCE = 10
 MIN_DELTA = 0.001
 
-# Label smoothing (prevent overconfidence)
+# Label smoothing
 LABEL_SMOOTHING = 0.1
 
 # Dropout rate
@@ -76,7 +76,6 @@ LOWER_IDX = [FDI_TO_INDEX[f] for f in LOWER_FDI]
 # GPU config
 available_gpus = []
 device = None
-# =======================================================
 
 
 def get_free_gpus(threshold_mb=1000, max_gpus=2):
@@ -110,7 +109,7 @@ def set_seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-# ==================== DATASET ====================
+# DATASET
 class Tooth2DDataset(Dataset):
     def __init__(self, img_roots, json_roots, transform=None, is_training=True):
         self.samples = []
@@ -169,11 +168,6 @@ class Tooth2DDataset(Dataset):
         return set(data.get('labels', []))
 
     def create_tooth_missing_vector(self, vertex_labels_set, jaw_type):
-        """
-        与 3D PointNet 完全一致的逻辑:
-        1. 创建 present 向量 (JSON中存在的牙齿 = 1)
-        2. 反转得到 missing 向量 (1 = missing, 0 = present)
-        """
         tooth_presence = np.zeros(NUM_TEETH, dtype=np.float32)
         
         for fdi_label in vertex_labels_set:
@@ -198,7 +192,7 @@ class Tooth2DDataset(Dataset):
         return img, torch.from_numpy(tooth_labels).float(), jaw_type
 
 
-# ==================== MODEL ====================
+# MODEL
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -229,7 +223,7 @@ class ResNetMultiLabel(nn.Module):
         return self.classifier(features)
 
 
-# ==================== LOSS FUNCTION (with Label Smoothing) ====================
+# LOSS FUNCTION
 class BCEWithLogitsLossSmoothed(nn.Module):
     def __init__(self, smoothing=0.1):
         super().__init__()
@@ -242,7 +236,7 @@ class BCEWithLogitsLossSmoothed(nn.Module):
         return self.bce(logits, targets)
 
 
-# ==================== METRICS ====================
+# METRICS
 def calculate_micro_metrics(pred, target):
     """calculate micro-averaged"""
     pred_np = (pred > 0.5).cpu().numpy().astype(int)
@@ -304,7 +298,7 @@ def calculate_per_tooth_metrics(pred, target, num_teeth=32):
     return per_tooth_metrics, macro_metrics
 
 
-# ==================== TRAINING ====================
+# TRAINING
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -370,7 +364,7 @@ def validate(model, dataloader, criterion, device):
     }, all_preds, all_labels
 
 
-# ==================== PLOTTING ====================
+# PLOTTING
 def plot_training_curves(history, save_dir, filename):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
@@ -418,10 +412,10 @@ def plot_training_curves(history, save_dir, filename):
     save_path = Path(save_dir) / filename
     plt.savefig(save_path, dpi=300)
     plt.close()
-    print(f"\n✓ Training plots saved to: {save_path}")
+    print(f"\n Training plots saved to: {save_path}")
 
 
-# ==================== CUSTOM COLLATE ====================
+# CUSTOM COLLATE
 def collate_fn(batch):
     imgs = torch.stack([item[0] for item in batch])
     labels = torch.stack([item[1] for item in batch])
@@ -429,7 +423,7 @@ def collate_fn(batch):
     return imgs, labels, jaw_types
 
 
-# ==================== MAIN ====================
+# MAIN
 def main():
     global available_gpus, device
     set_seed(SEED)

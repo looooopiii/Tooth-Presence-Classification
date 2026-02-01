@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# ============= CONFIGURATION =============
+# CONFIGURATION
 AUGMENTED_CSV = "/home/user/lzhou/week16/Aug/augment_test/train_labels_augmented.csv"
 RANDOM_CSV = "/home/user/lzhou/week16/Aug/augment_random/train_labels_random.csv"
 OUTPUT_DIR = Path("/home/user/lzhou/week16-32/output/check/Aug")
@@ -349,9 +349,9 @@ def main():
         print(f"    Balanced teeth (30-70%): {balanced}/32 ({balanced/32*100:.1f}%)")
         print(f"     Highly imbalanced (<20% or >80%): {highly_imbalanced}/32 ({highly_imbalanced/32*100:.1f}%)")
         
-        if balanced >= 24:  # 75% or more balanced
+        if balanced >= 24:
             print(f"   Verdict: GOOD - Augmentation effectively reduced imbalance!")
-        elif balanced >= 16:  # 50% or more balanced
+        elif balanced >= 16:
             print(f"   Verdict: MODERATE - Some improvement, but more work needed")
         else:
             print(f"   Verdict: POOR - Augmentation did not sufficiently address imbalance")

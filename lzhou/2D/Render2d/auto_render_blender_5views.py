@@ -4,14 +4,14 @@ from pathlib import Path
 import math
 import mathutils
 
-# === CONFIGURATION ===
+# CONFIGURATION
 DATA_ROOT = Path("/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split")
 OUTPUT_ROOT = Path("/home/user/lzhou/blender-5views")
 
-# === ENABLE OBJ SUPPORT ===
+# ENABLE OBJ SUPPORT
 addon_utils.enable("io_scene_obj")
 
-# === DEFINE CAMERA OFFSETS ===
+# DEFINE CAMERA OFFSETS
 camera_views = {
     "top":    (0, 0, 100),
     "bottom": (0, 0, -100),
@@ -20,13 +20,13 @@ camera_views = {
     "right":  (100, 0, 0),
 }
 
-# === FIND ALL OBJ FILES ===
+# FIND ALL OBJ FILES
 obj_files = sorted((DATA_ROOT / "upper").rglob("*.obj")) + \
             sorted((DATA_ROOT / "lower").rglob("*.obj"))
 
 print(f" Found {len(obj_files)} OBJ files.")
 
-# === PROCESS EACH OBJ FILE ===
+# PROCESS EACH OBJ FILE
 for obj_path in obj_files:
     print(f"\n Rendering {obj_path.name}...")
 
@@ -63,7 +63,7 @@ for obj_path in obj_files:
     for view_name, offset in camera_views.items():
         print(f"   View: {view_name}")
 
-        # Delete camera + target
+        # Delete camera and target
         bpy.ops.object.select_all(action='DESELECT')
         for o in bpy.context.scene.objects:
             if o.type in ['CAMERA', 'EMPTY']:
@@ -76,7 +76,7 @@ for obj_path in obj_files:
         cam = bpy.context.object
         bpy.context.scene.camera = cam
 
-        # Add target (empty)
+        # Add target
         bpy.ops.object.empty_add(type='PLAIN_AXES', location=center)
         target = bpy.context.object
         con = cam.constraints.new(type='TRACK_TO')
@@ -94,6 +94,6 @@ for obj_path in obj_files:
 
         # Render
         bpy.ops.render.render(write_still=True)
-        print(f"     Saved: {out_file.name}")
+        print(f"Saved: {out_file.name}")
 
 print("\n All views rendered for all models.")

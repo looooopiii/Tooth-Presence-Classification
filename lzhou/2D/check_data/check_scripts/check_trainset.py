@@ -51,11 +51,11 @@ def get_jaw_type(tooth_id):
         return 'unknown'
 
 def main():
-    """Main function to count teeth, save data, and plot distributions - CORRECTED VERSION."""
+    """Main function to count teeth, save data, and plot distributions."""
     output_dir = '/home/user/lzhou/week16-32/output/check/train'
     os.makedirs(output_dir, exist_ok=True)
 
-    # --- Data Counting ---
+    # Data Counting
     upper_counts, upper_samples = count_teeth(JSON_ROOT_UPPER)
     lower_counts, lower_samples = count_teeth(JSON_ROOT_LOWER)
     
@@ -77,7 +77,7 @@ def main():
     # Sort tooth IDs
     tooth_ids_sorted = sorted(all_tooth_ids, key=int)
     
-    # CORRECTED: Calculate presence and absence based on the CORRECT jaw
+    # Calculate presence and absence based on the CORRECT jaw
     results = []
     for tooth_id in tooth_ids_sorted:
         jaw_type = get_jaw_type(tooth_id)
@@ -109,7 +109,7 @@ def main():
     # Create DataFrame
     df = pd.DataFrame(results)
     
-    # --- Save data to CSV ---
+    # Save data to CSV
     csv_path = os.path.join(output_dir, 'tooth_counts_corrected.csv')
     df.to_csv(csv_path, index=False)
     print(f"\nCorrected data table saved to {csv_path}")
@@ -121,7 +121,7 @@ def main():
     high_absence = df[df['Absent_Count'] / df['Total_Samples'] > 0.1].sort_values('Absent_Count', ascending=False)
     print(high_absence[['ToothID', 'Jaw', 'Present_Count', 'Absent_Count', 'Presence_Rate']].to_string(index=False))
     
-    # --- Plotting ---
+    # Plotting
     presence = df['Present_Count'].tolist()
     absence = df['Absent_Count'].tolist()
     
@@ -185,11 +185,11 @@ def main():
     print(f"Corrected presence rate chart saved to {rate_plot_path}")
     plt.close(fig_rate)
     
-    # Plot 3: Comparison - Before vs After Correction (Conceptual)
+    # Plot 3: Comparison: Before vs After Correction
     # This shows why the correction was necessary
     fig_compare, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7))
     
-    # "Before" - incorrect calculation
+    # "Before": incorrect calculation
     total_all = upper_samples + lower_samples
     incorrect_absence = [total_all - (upper_counts.get(tid, 0) + lower_counts.get(tid, 0)) 
                         for tid in tooth_ids_sorted]
@@ -205,7 +205,7 @@ def main():
     ax1.legend()
     ax1.grid(axis='y', linestyle='--', alpha=0.3)
     
-    # "After" - correct calculation
+    # "After": correct calculation
     ax2.bar(x, presence, width, label='Present', color='green', alpha=0.8)
     ax2.bar(x, absence, width, bottom=presence, label='Absent', color='red', alpha=0.8)
     ax2.set_title('AFTER Correction\n(Correct: Upper teeth use upper samples, lower teeth use lower samples)', 

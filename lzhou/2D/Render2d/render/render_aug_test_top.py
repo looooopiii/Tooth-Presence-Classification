@@ -7,7 +7,7 @@ import sys
 import math
 import bmesh
 
-# ===================== CONFIG =====================
+# CONFIG
 AUG_ROOT = Path("/home/user/lzhou/week10/output/augment_test")
 OUTPUT_ROOT = Path("/home/user/lzhou/week15/render_output/render_aug_test") 
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
@@ -17,9 +17,9 @@ CAMERA_VIEWS = {
     "top": (0.0, -1.0, 0.0),
 }
 
-# =========== UNIFIED RENDER SETTINGS ===========
+# UNIFIED RENDER SETTINGS
 def setup_render_settings():
-    """generalized render settings - consistent with other scripts"""
+    """generalized render settings"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
@@ -72,9 +72,9 @@ def setup_render_settings():
     return scene
 
 
-# =========== UNIFIED LIGHTING ===========
+# UNIFIED LIGHTING
 def setup_lighting(center=(0, 0, 0)):
-    """unified lighting settings, consistent with other scripts"""
+    """unified lighting settings"""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type == 'LIGHT':
@@ -113,9 +113,9 @@ def setup_lighting(center=(0, 0, 0)):
     add_tracked_light('SPOT', (cx, cy - 320, cz + 80), energy=120000, spot_deg=65)
 
 
-# =========== UNIFIED MATERIAL ===========
+# UNIFIED MATERIAL
 def create_tooth_material():
-    """unified tooth material, consistent with other scripts"""
+    """unified tooth material"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -174,15 +174,14 @@ def fill_holes_in_object(obj, smooth_factor=0.2):
         pass
 
 
-# ============== MODEL PREPARATION ===================
-def prepare_model(model_obj):
+# MODEL PREPARATION
     """Prepare the imported model: fill holes, unify material, center, and estimate camera distance."""
     fill_holes_in_object(model_obj)
 
-    # unified material - remove all old materials, use only one
+    # unified material
     mat = create_tooth_material()
-    model_obj.data.materials.clear()  # ← remove all materials (including Gingiva)
-    model_obj.data.materials.append(mat)  # ← add only unified material
+    model_obj.data.materials.clear()
+    model_obj.data.materials.append(mat)
 
     # Smooth shading
     bpy.ops.object.select_all(action='DESELECT')
@@ -212,10 +211,9 @@ def prepare_model(model_obj):
     return optimal_distance
 
 
-# =================== CAMERA =========================
+# CAMERA
 def setup_camera(direction_vec, optimal_distance):
-    """Set up camera - maintain original perspective logic but unified parameters."""
-    # Delete old camera/empty objects
+    """Set up camera: maintain original perspective logic but unified parameters."""
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
         if obj.type in ['CAMERA', 'EMPTY']:
@@ -249,7 +247,7 @@ def setup_camera(direction_vec, optimal_distance):
     return cam
 
 
-# ================= VALIDATION ======================
+# VALIDATION
 def validate_obj_import(obj_path: Path):
     meshes = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
     if not meshes:
@@ -263,7 +261,7 @@ def validate_obj_import(obj_path: Path):
     return m
 
 
-# ============== CLEAN SCENE MESHES ==================
+# CLEAN SCENE MESHES
 def clear_meshes():
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.context.scene.objects:
@@ -272,16 +270,15 @@ def clear_meshes():
     bpy.ops.object.delete()
 
 
-# ============== ENABLE OBJ IMPORT ADDON ===========
+# ENABLE OBJ IMPORT ADDON
 def enable_obj_import():
     addon_utils.enable("io_scene_obj", default_set=True, persistent=True)
 
 
-# ================== MAIN LOOP =======================
+# MAIN LOOP
 def main():
     enable_obj_import()
     scene = setup_render_settings()
-    # Setup lighting once at origin (will be tracked to models)
     setup_lighting(center=(0, 0, 0))
 
     total_processed = 0
@@ -353,7 +350,7 @@ def main():
     print(f"Output root:      {OUTPUT_ROOT}")
     
     if errors:
-        print(f"\n⚠ Errors ({len(errors)}):")
+        print(f"\n Errors ({len(errors)}):")
         for e in errors[:12]:
             print(f"  • {e}")
         if len(errors) > 12:

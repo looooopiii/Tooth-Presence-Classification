@@ -19,7 +19,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# ==================== CONFIGURATION ====================
+# CONFIGURATION
 # 3D JSON label roots
 JSON_ROOT_LOWER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower"
 JSON_ROOT_UPPER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
@@ -39,7 +39,7 @@ LAST_MODEL_FILENAME = "dynamit_last_2d_32teeth.pth"
 PLOT_FILENAME = "training_metrics_dynamit_32teeth.png"
 METRICS_FILENAME = "detailed_metrics_dynamit_32teeth.json"
 
-# ==================== HYPERPARAMETERS ====================
+# HYPERPARAMETERS
 BATCH_SIZE = 16
 NUM_EPOCHS = 35
 LEARNING_RATE = 5e-4
@@ -73,7 +73,6 @@ LOWER_IDX = [FDI_TO_INDEX[f] for f in LOWER_FDI]
 # GPU config
 available_gpus = []
 device = None
-# =======================================================
 
 
 def get_free_gpus(threshold_mb=1000, max_gpus=2):
@@ -107,13 +106,8 @@ def set_seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-# ==================== DYNAMIC LOSS ====================
+# DYNAMIC LOSS
 class DynamitLoss(nn.Module):
-    """
-    Batch-adaptive class-balancing loss.
-    Positive class = missing (1), Negative = present (0).
-    Weights are computed per-batch from target counts.
-    """
     def __init__(self, device):
         super().__init__()
         self.device = device
@@ -132,7 +126,7 @@ class DynamitLoss(nn.Module):
         return F.binary_cross_entropy_with_logits(logits, targets, weight=weights)
 
 
-# ==================== DATASET ====================
+# DATASET
 class Tooth2DDataset(Dataset):
     def __init__(self, img_roots, json_roots, transform=None, is_training=True):
         self.samples = []
@@ -191,10 +185,6 @@ class Tooth2DDataset(Dataset):
         return set(data.get('labels', []))
 
     def create_tooth_missing_vector(self, vertex_labels_set, jaw_type):
-        """
-        Create a binary vector indicating missing teeth (1 = missing, 0 = present).
-        Adjusts for upper/lower jaw teeth only.
-        """
         tooth_presence = np.zeros(NUM_TEETH, dtype=np.float32)
         
         for fdi_label in vertex_labels_set:
@@ -219,7 +209,7 @@ class Tooth2DDataset(Dataset):
         return img, torch.from_numpy(tooth_labels).float(), jaw_type
 
 
-# ==================== MODEL====================
+# MODEL
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -250,7 +240,7 @@ class ResNetMultiLabel(nn.Module):
         return self.classifier(features)
 
 
-# ==================== METRICS ====================
+# METRICS
 def calculate_micro_metrics(pred, target):
     """Calculate micro-averaged metrics"""
     pred_np = (pred > 0.5).cpu().numpy().astype(int)
@@ -311,7 +301,7 @@ def calculate_per_tooth_metrics(pred, target, num_teeth=32):
     return per_tooth_metrics, macro_metrics
 
 
-# ==================== TRAINING ====================
+# TRAINING
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -376,7 +366,7 @@ def validate(model, dataloader, criterion, device):
     }, all_preds, all_labels
 
 
-# ==================== PLOTTING ====================
+# PLOTTING
 def plot_training_curves(history, save_dir, filename):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
@@ -427,7 +417,7 @@ def plot_training_curves(history, save_dir, filename):
     print(f"\n✓ Training plots saved to: {save_path}")
 
 
-# ==================== CUSTOM COLLATE ====================
+# CUSTOM COLLATE
 def collate_fn(batch):
     imgs = torch.stack([item[0] for item in batch])
     labels = torch.stack([item[1] for item in batch])
@@ -435,7 +425,7 @@ def collate_fn(batch):
     return imgs, labels, jaw_types
 
 
-# ==================== MAIN ====================
+# MAIN
 def main():
     global available_gpus, device
     set_seed(SEED)
@@ -449,7 +439,7 @@ def main():
     device = torch.device(f"cuda:{available_gpus[0]}" if torch.cuda.is_available() else "cpu")
     print(f"Primary device: {device}")
 
-    # Data augmentations (与 baseline 一致)
+    # Data augmentations
     train_transform = transforms.Compose([
         transforms.Resize((IMG_SIZE, IMG_SIZE)),
         transforms.RandomRotation(degrees=10),
@@ -534,7 +524,7 @@ def main():
     if len(available_gpus) > 1:
         model = torch.nn.DataParallel(model, device_ids=available_gpus)
 
-    # ========== Dynamic Loss ==========
+    # Dynamic Loss
     criterion = DynamitLoss(device)
     print(" Using Dynamic Loss for class imbalance handling")
     

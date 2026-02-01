@@ -29,7 +29,7 @@ import os
 # Dataset Training Configuration
 USE_ORIGINAL = True   # if use original dataset
 USE_AUGMENTED = True  # if use augmented dataset
-USE_RANDOM = True     # if use random augmented (3600 samples)
+USE_RANDOM = True     # if use random augmented
 
 # Original dataset roots
 JSON_ROOT_LOWER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower"
@@ -58,8 +58,7 @@ LAST_MODEL_FILENAME = "augmented_dynamit_last_2d_16plus1teeth.pth"
 PLOT_FILENAME = "training_metrics_augmented_dynamit_16plus1.png"
 METRICS_FILENAME = "detailed_metrics_augmented_dynamit_16plus1.json"
 
-# ==================== HYPERPARAMETERS ====================
-BATCH_SIZE = 32       # Increased due to more data
+BATCH_SIZE = 32
 NUM_EPOCHS = 50
 LEARNING_RATE = 5e-4
 WEIGHT_DECAY = 0.05
@@ -72,21 +71,21 @@ BACKBONE = "resnet18"
 # Early stopping
 EARLY_STOPPING_PATIENCE = 10
 MIN_DELTA = 0.001
-EARLY_STOPPING_METRIC = "val_pr_auc_macro"  # "val_pr_auc_macro" or "val_macro_f1"
+EARLY_STOPPING_METRIC = "val_pr_auc_macro"
 
 # Dropout
 DROPOUT_RATE = 0.5
 
 # Macro metrics settings
-MACRO_SUPPORT_MIN = 0  # Include every position (even support 0) when reporting macros
+MACRO_SUPPORT_MIN = 0
 
 # Threshold tuning
-THRESHOLD_STRATEGY = "per_position"  # "fixed" or "per_position"
+THRESHOLD_STRATEGY = "per_position"
 FIXED_TEETH_THRESHOLD = 0.5
 JAW_THRESHOLD = 0.5
 THRESHOLD_GRID = np.linspace(0.05, 0.95, 19)
 
-# FDI Notation - 16 positions mapping
+# FDI Notation (16 positions mapping)
 POSITION_TO_FDI_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 POSITION_TO_FDI_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
 
@@ -328,8 +327,8 @@ def build_original_samples(img_roots, json_roots, image_suffix=".png", cache_ima
 class DynamitLoss16Plus1(nn.Module):
     """
     Combined loss for 16+1 architecture:
-    - Dynamic Loss for teeth (0-15): batch-adaptive class balancing
-    - Standard BCE for jaw (16): balanced binary classification
+    Dynamic Loss for teeth (0-15): batch-adaptive class balancing
+    Standard BCE for jaw (16): balanced binary classification
     """
     def __init__(self, device):
         super().__init__()
@@ -366,9 +365,8 @@ class DynamitLoss16Plus1(nn.Module):
         return F.binary_cross_entropy_with_logits(logits, targets, weight=weights)
 
 
-# ==================== Dataset Class ====================
+# Dataset Class
 class AugmentedToothDataset16Plus1(Dataset):
-    """Dataset for augmented data with 16+1 output format"""
     def __init__(self, csv_paths, render_root, transform=None, cache_images=False):
         self.data_cache = []
         self.transform = transform
@@ -481,7 +479,7 @@ class AugmentedToothDataset16Plus1(Dataset):
         return img, labels, sample["jaw_type"]
 
 
-# ==================== Model ====================
+# Model
 class ResNetMultiLabel16Plus1(nn.Module):
     def __init__(self, backbone="resnet18", num_outputs=17, dropout_rate=0.5):
         super().__init__()
@@ -511,7 +509,7 @@ class ResNetMultiLabel16Plus1(nn.Module):
         return self.classifier(features)
 
 
-# ==================== Metrics ====================
+# Metrics
 def _expand_teeth_thresholds(teeth_thresholds):
     if isinstance(teeth_thresholds, (int, float, np.floating)):
         return np.full(NUM_TEETH_POSITIONS, float(teeth_thresholds), dtype=np.float32)
@@ -561,7 +559,7 @@ def _safe_average_precision(y_true, y_score):
 
 
 def _format_metric_for_support(value, support):
-    """Return `n/a` when the position has zero positives, otherwise format numerically."""
+    """Return n/a when the position has zero positives, otherwise format numerically."""
     if support <= 0:
         return f"{'n/a':>10}"
     return f"{value:>10.4f}"
@@ -808,7 +806,7 @@ def print_final_report_dynamit_style(pred_probs, targets):
     print("=" * 90 + "\n")
 
 
-# ==================== Training ====================
+# Training
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -892,7 +890,7 @@ def validate(model, dataloader, criterion, device):
     }, all_preds, all_labels, all_jaws
 
 
-# ==================== Plotting ====================
+# Plotting
 def plot_training_curves(history, save_dir, filename):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
@@ -964,7 +962,7 @@ def plot_training_curves(history, save_dir, filename):
     print(f"Training plots saved to: {save_path}")
 
 
-# ==================== Custom Collate ====================
+# Custom Collate
 def collate_fn(batch):
     imgs = torch.stack([item[0] for item in batch])
     labels = torch.stack([item[1] for item in batch])
@@ -972,7 +970,7 @@ def collate_fn(batch):
     return imgs, labels, jaw_types
 
 
-# ==================== MAIN ====================
+# MAIN
 def main():
     global available_gpus, device
     set_seed(SEED)
@@ -1155,7 +1153,7 @@ def main():
         else:
             patience_counter += 1
             if patience_counter >= EARLY_STOPPING_PATIENCE:
-                print(f"\n✓ Early stopping at epoch {epoch+1}")
+                print(f"\n Early stopping at epoch {epoch+1}")
                 break
 
     print("\nLoading best model for final report...")

@@ -29,9 +29,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# =================================================================================
 # FUSION STRATEGY ENUM
-# =================================================================================
 class FusionStrategy(Enum):
     AVERAGE = "average"                    # average all angles
     MAX_CONFIDENCE = "max_confidence"      # choose per-tooth best angle based on max confidence
@@ -41,9 +39,7 @@ class FusionStrategy(Enum):
     WEIGHTED_AVERAGE = "weighted_average"  # confidence weighted average
     JAW_CONFIDENCE = "jaw_confidence"      # choose based on jaw prediction confidence
 
-# =================================================================================
 # CONFIGURATION
-# =================================================================================
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 MODEL_PATH = "/home/user/lzhou/week15-32/output/Train2D/32teeth/baseline_bce_best_2d_32teeth.pth"
@@ -56,11 +52,11 @@ NUM_TEETH = 32
 NUM_SAMPLE_PREDICTIONS = 10
 DROPOUT_RATE = 0.5  
 
-# ========== FUSION CONFIGURATION ==========
+# FUSION CONFIGURATION
 BEST_N = 2  # Use for BEST_N_ANGLES
 FIXED_STRATEGY = FusionStrategy.BEST_N_ANGLES
 
-# ========== SELECTION METRIC ==========
+# SELECTION METRIC
 # 'balanced_accuracy', 'macro_f1', 'macro_recall', 'macro_precision'
 SELECTION_METRIC = 'macro_f1'
 
@@ -76,9 +72,7 @@ INDEX_TO_FDI = {i: fdi_label for fdi_label, i in FDI_TO_INDEX.items()}
 UPPER_FDI = [11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28]
 LOWER_FDI = [31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48]
 
-# =================================================================================
 # ID NORMALIZATION HELPER
-# =================================================================================
 def normalize_png_stem_to_newid(stem: str) -> str:
     """Cleans up filenames to match CSV IDs."""
     s = stem.replace('-', '_').strip()
@@ -120,9 +114,7 @@ def normalize_png_stem_to_newid(stem: str) -> str:
         
     return new_id.lower()
 
-# =================================================================================
 # MODEL DEFINITION
-# =================================================================================
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -151,9 +143,7 @@ class ResNetMultiLabel(nn.Module):
         features = self.backbone(x)
         return self.classifier(features)
 
-# =================================================================================
 # FUSION METHODS
-# =================================================================================
 def calculate_confidence_score(probs):
     """calculate confidence score as mean distance from 0.5"""
     return np.mean(np.abs(probs - 0.5))
@@ -221,9 +211,7 @@ def fuse_predictions(probs_list, strategy=FusionStrategy.AVERAGE, n_best=2, jaw_
     else:
         return np.mean(probs_array, axis=0)
 
-# =================================================================================
 # DATA LOADING
-# =================================================================================
 def load_test_labels(csv_path):
     """Load test labels with jaw type handling."""
     df = pd.read_csv(csv_path, dtype={'new_id': str})
@@ -300,9 +288,7 @@ def find_test_images(img_dir, labels_dict):
     
     return grouped
 
-# =================================================================================
 # INFERENCE
-# =================================================================================
 def test_model(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, 
                strategy=FusionStrategy.AVERAGE, n_best=2, show_progress=True):
     """Run inference with specified fusion strategy."""
@@ -357,9 +343,7 @@ def test_model(model, grouped_imgs, labels_dict, jaw_type_dict, device, transfor
             
     return np.array(all_preds), np.array(all_targets), all_ids, fusion_stats
 
-# =================================================================================
 # METRICS CALCULATION
-# =================================================================================
 def calculate_metrics(preds, targets, jaw_type_dict, all_ids):
     """Calculate comprehensive metrics."""
     if len(preds) == 0:
@@ -458,9 +442,7 @@ def get_metric_value(metrics, metric_name):
     else:
         return metrics['overall_micro']['balanced_accuracy']
 
-# =================================================================================
 # COMPARISON OF ALL STRATEGIES
-# =================================================================================
 def compare_all_strategies(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
     """Compare all fusion strategies and collect results"""
     strategies = [
@@ -510,9 +492,7 @@ def select_best_strategy(results, metric_name='balanced_accuracy'):
     
     return best_strategy, best_value
 
-# =================================================================================
 # PRINTING FUNCTIONS
-# =================================================================================
 def print_comparison_table(results, metric_name='balanced_accuracy'):
     """Print comparison table of all strategies."""
     print("\n" + "="*120)
@@ -652,9 +632,7 @@ def print_sample_predictions(ids, preds, targets, jaw_type_dict, num_samples=10)
     
     print("\n" + "="*80)
 
-# =================================================================================
 # PLOTTING FUNCTIONS
-# =================================================================================
 def generate_comparison_plot(results, save_dir):
     """Generate a comparison plot for all strategies."""
     strategies = list(results.keys())
@@ -724,7 +702,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     """Generate detailed plots for the best strategy."""
     per_tooth = metrics['per_tooth']
     
-    # ===== F1 Score per Jaw =====
+    # F1 Score per Jaw
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     
     # Upper jaw
@@ -757,7 +735,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     plt.savefig(Path(save_dir) / "f1_score_per_jaw.png", dpi=150)
     plt.close()
     
-    # ===== Recall per Tooth =====
+    # Recall per Tooth
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     
     upper_recalls = [per_tooth[fdi]['recall'] for fdi in UPPER_FDI]
@@ -786,17 +764,16 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     plt.savefig(Path(save_dir) / "recall_per_jaw.png", dpi=150)
     plt.close()
     
-    # ===== Confusion Matrix =====
+    # Confusion Matrix
     preds_bin = (preds > 0.5).astype(int)
     targets_bin = targets.astype(int)
     cm = confusion_matrix(targets_bin.flatten(), preds_bin.flatten())
     
     plt.figure(figsize=(10, 8))
     
-    # 计算百分比
+    # caculate percentages
     cm_percent = cm.astype('float') / cm.sum() * 100
     
-    # 创建标注文本
     labels = np.array([[f'{cm[i,j]}\n({cm_percent[i,j]:.1f}%)' 
                         for j in range(2)] for i in range(2)])
     
@@ -821,7 +798,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     plt.savefig(Path(save_dir) / "confusion_matrix.png", dpi=150, bbox_inches='tight')
     plt.close()
     
-    # ===== Precision vs Recall Scatter =====
+    # Precision vs Recall Scatter
     fig, ax = plt.subplots(figsize=(10, 8))
     
     precisions = [per_tooth[fdi]['precision'] for fdi in VALID_FDI_LABELS]
@@ -864,9 +841,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     
     print(f" Detailed plots saved to {save_dir}")
 
-# =================================================================================
 # MAIN
-# =================================================================================
 def main():
     print("\n" + "="*80)
     print(" "*10 + "2D BASELINE MODEL TESTING - Fixed STRATEGY")

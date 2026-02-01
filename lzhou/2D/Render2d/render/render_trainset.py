@@ -6,7 +6,6 @@ import math
 from mathutils import Vector, Matrix
 import os
 
-# Try to use numpy for PCA-based upright orientation
 try:
     import numpy as np
     HAS_NUMPY = True
@@ -21,7 +20,7 @@ def _np_eigh_sorted(cov):
     return w[idx], v[:, idx]
 
 
-# === CONFIG ===
+# CONFIG
 BASE_DIR = Path("/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split")
 OUTPUT_DIR = Path("/home/user/lzhou/week15/render_output/train")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -29,11 +28,11 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 # only top view for trainset
 ROTATION_ANGLES_DEG = [0]
 
-# === ENABLE OBJ IMPORT ADDON ===
+# ENABLE OBJ IMPORT ADDON
 addon_utils.enable("io_scene_obj")
 
 
-# =========== UNIFIED RENDER SETTINGS ===========
+# UNIFIED RENDER SETTINGS
 def setup_render_settings():
     """general render settings"""
     scene = bpy.context.scene
@@ -88,7 +87,7 @@ def setup_render_settings():
     return scene
 
 
-# =========== UNIFIED LIGHTING ===========
+# UNIFIED LIGHTING
 def setup_lighting(center, target):
     """unified lighting settings"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -123,7 +122,7 @@ def setup_lighting(center, target):
     add_tracked_light('SPOT', (center.x, center.y - 320, center.z + 80), energy=120000, spot_deg=65)
 
 
-# =========== UNIFIED MATERIAL ===========
+# UNIFIED MATERIAL
 def create_tooth_material():
     """unified tooth material"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
@@ -158,7 +157,7 @@ def create_tooth_material():
     return mat
 
 
-# =========== ORIENTATION HELPERS ===========
+# ORIENTATION HELPERS
 def orient_top_view(model):
     """basic top view orientation"""
     dims = model.dimensions
@@ -278,7 +277,7 @@ def auto_flip_for_top_view(model, jaw_type: str):
             bpy.context.view_layer.update()
 
 
-# =========== UNIFIED MODEL PREP ===========
+# UNIFIED MODEL PREP
 def prepare_model(model, jaw_type: str):
     """unified model preparation"""
     # Material
@@ -288,7 +287,7 @@ def prepare_model(model, jaw_type: str):
     else:
         model.data.materials.append(tooth_mat)
 
-    # Smooth + normals
+    # Smooth and normals
     bpy.ops.object.select_all(action='DESELECT')
     model.select_set(True)
     bpy.context.view_layer.objects.active = model
@@ -331,7 +330,7 @@ def prepare_model(model, jaw_type: str):
     bpy.context.view_layer.update()
 
 
-# =========== UNIFIED CAMERA ===========
+# UNIFIED CAMERA
 def setup_camera(model, margin=1.1):
     """unified orthographic camera setup"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -367,7 +366,7 @@ def setup_camera(model, margin=1.1):
     return cam, center, target
 
 
-# === VALIDATION FUNCTIONS ===
+# VALIDATION FUNCTIONS
 def validate_obj_import(obj_file):
     """Validate OBJ file import and mesh quality"""
     if not bpy.context.selected_objects:
@@ -388,7 +387,7 @@ def validate_obj_import(obj_file):
     return model
 
 
-# === MAIN PROCESSING LOOP ===
+# MAIN PROCESSING LOOP
 def main():
     scene = setup_render_settings()
     
@@ -456,7 +455,7 @@ def main():
                 prepare_model(model, jaw_type)
                 bpy.context.view_layer.update()
 
-                # Setup camera and lighting (unified settings)
+                # Setup camera and lighting
                 cam, center, target = setup_camera(model, margin=1.1)
                 setup_lighting(center, target)
                 

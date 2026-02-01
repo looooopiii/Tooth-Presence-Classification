@@ -9,7 +9,7 @@ import multiprocessing as mp
 from datetime import datetime
 from tqdm import tqdm
 
-# ============= CONFIGURATION =============
+# CONFIGURATION
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 TRAIN_DATA_PATHS = [
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower",
@@ -27,12 +27,9 @@ WORKERS = int(os.getenv("AUG_WORKERS", str(DEFAULT_WORKERS)))
 WORKERS = max(1, WORKERS)
 USE_TORCH = True
 TORCH_DEVICE = os.getenv("AUG_DEVICE", "cuda")
-# === Augmentation policy suggested by prof/supervisor ===
-# Choose how many teeth to remove and which ones with probabilities (lower prob for wisdom teeth),
-# aiming for a more balanced per-tooth missing/present distribution.
 AUGMENT_MODE = "balanced"  # {"balanced", "match_test"}
 REMOVE_K_RANGE = (2, 5)     # randomly choose K in this range
-# weights per tooth id; defaults to 1.0 if not listed. Wisdom teeth get lower weights.
+# weights per tooth id. Defaults to 1.0 if not listed. Wisdom teeth get lower weights.
 REMOVAL_WEIGHTS = {
     # Upper jaw
     18: 0.2, 17: 0.6, 16: 0.8, 15: 1.0, 14: 1.0, 13: 1.2, 12: 1.2, 11: 1.2,
@@ -41,19 +38,15 @@ REMOVAL_WEIGHTS = {
     48: 0.2, 47: 0.6, 46: 0.8, 45: 1.0, 44: 1.0, 43: 1.2, 42: 1.2, 41: 1.2,
     31: 1.2, 32: 1.2, 33: 1.2, 34: 1.0, 35: 1.0, 36: 0.8, 37: 0.6, 38: 0.2,
 }
-# Limit fraction of wisdom teeth in a removal set (encourages non‑wisdom deletions)
-MAX_WISDOM_IN_SET = 1       # at most this many wisdom teeth per augmented sample
+# Limit fraction of wisdom teeth in a removal set
+MAX_WISDOM_IN_SET = 1
 FLIPPED_LABELS_IN_CSV = True
 
 UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 LOWER_TEETH = [38, 37, 36, 35, 34, 33, 32, 31, 41, 42, 43, 44, 45, 46, 47, 48]
 ALL_TEETH = sorted(UPPER_TEETH + LOWER_TEETH)
-# =========================================
 
-
-# =========================================
 # HELPER FUNCTIONS
-# =========================================
 def load_all_train_samples():
     """Loads all available training samples from the specified paths."""
     samples = {'upper': [], 'lower': []}
@@ -106,7 +99,7 @@ def _init_worker(train_samples):
     _TRAIN_SAMPLES = train_samples
 
 
-# --- Balanced sampling utility ---
+# Balanced sampling utility
 def _sample_teeth_balanced(candidates, k):
     """Sample k unique teeth from candidates with weights in REMOVAL_WEIGHTS.
     Enforce at most MAX_WISDOM_IN_SET wisdom teeth if possible.
@@ -135,9 +128,8 @@ def _sample_teeth_balanced(candidates, k):
                 chosen = list(keep) + add
     return set(chosen)
 
-# --- Robust boundary detection and ordering (edge kept/removed counts) ---
+# Robust boundary detection and ordering (edge kept/removed counts)
 def _parse_face_verts(face_line: str):
-    """Parse an OBJ face line 'f v[/vt[/vn]] ...' -> list of vertex ids (int)."""
     parts = face_line.strip().split()
     vids = []
     for tok in parts[1:]:
@@ -147,13 +139,9 @@ def _parse_face_verts(face_line: str):
     return vids
 
 def _build_boundary_components(vertices_to_remove, face_lines):
-    """
-    Build boundary components using edge kept/removed adjacency counting.
-    Returns: list of dicts [{'vertices': set([...]), 'edges': [(u,v), ...]}, ...]
-    """
-    # 1) Parse faces + classify kept/removed
+    # Parse faces + classify kept/removed
     faces = []
-    face_types = []  # 'kept' | 'removed'
+    face_types = []
     for fl in face_lines:
         vids = _parse_face_verts(fl)
         if len(vids) < 2:
@@ -162,7 +150,7 @@ def _build_boundary_components(vertices_to_remove, face_lines):
         is_removed = any(v in vertices_to_remove for v in vids)
         face_types.append('removed' if is_removed else 'kept')
 
-    # 2) Accumulate for each undirected edge the number of kept/removed adjacencies
+    # Accumulate for each undirected edge the number of kept/removed adjacencies
     from collections import defaultdict
     edge_cnt = defaultdict(lambda: {'kept': 0, 'removed': 0})
     for vids, ftype in zip(faces, face_types):
@@ -172,14 +160,14 @@ def _build_boundary_components(vertices_to_remove, face_lines):
             key = (a, b) if a < b else (b, a)
             edge_cnt[key][ftype] += 1
 
-    # 3) Select boundary edges: both endpoints kept, and edge touches kept & removed
+    # Select boundary edges: both endpoints kept, and edge touches kept and removed
     boundary_edges = []
     for (u, v), cnt in edge_cnt.items():
         if cnt['kept'] > 0 and cnt['removed'] > 0:
             if (u not in vertices_to_remove) and (v not in vertices_to_remove):
                 boundary_edges.append((u, v))
 
-    # 4) Build adjacency and split into components
+    # Build adjacency and split into components
     adj = {}
     for u, v in boundary_edges:
         adj.setdefault(u, set()).add(v)
@@ -263,11 +251,6 @@ def _component_reference_normal(comp_edges, edge_normals, comp_vertices, coord_l
     return ref
 
 def _order_by_local_plane(old_ids, coord_lut):
-    """
-    Project boundary vertices to a best-fit plane through centroid and order by angle.
-    Works for both closed cycles and open chains; for chains this produces a 'near cycle'
-    that is robust for fan triangulation.
-    """
     pts = [coord_lut[i] for i in old_ids if i in coord_lut]
     if len(pts) == 0:
         return []
@@ -329,13 +312,12 @@ def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_toot
         elif ln.startswith('f '):
             parts = ln.strip().split()
             face_verts_old_scan = [int(p.split('/')[0]) for p in parts[1:]]
-            # we haven't built vertices_to_remove yet; defer this count after it's computed
 
     vertex_lines = obj_cache['vertex_lines']
     face_lines = obj_cache['face_lines']
     other_lines = obj_cache['other_lines']
 
-    # Now that vertices_to_remove is known, recompute dominant material based on kept faces
+    # vertices_to_remove is known, recompute dominant material based on kept faces
     current_mtl = None
     kept_mtl_counts = {}
     for ln in lines:
@@ -355,7 +337,7 @@ def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_toot
 
     boundary_components = _build_boundary_components(vertices_to_remove, face_lines)
     with open(output_obj, 'w') as f:
-        # Preserve original mtllib if present; also copy the .mtl next to the new obj
+        # Preserve original mtllib if present, also copy the .mtl next to the new obj
         if mtllib_name:
             # write a single mtllib line
             f.write(f"mtllib {mtllib_name}\n")
@@ -506,9 +488,7 @@ def _process_test_row(args):
 
     return rows
 
-# =========================================
 # MAIN EXECUTION
-# =========================================
 def main():
     random.seed(RANDOM_SEED); np.random.seed(RANDOM_SEED)
     if not Path(TEST_LABELS_CSV).exists(): print(f"[ERROR] CSV file not found: {TEST_LABELS_CSV}"); return

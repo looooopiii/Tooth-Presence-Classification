@@ -9,7 +9,6 @@ import sys
 import os
 import subprocess
 
-# Try to use numpy for PCA-based upright orientation (falls back if missing)
 try:
     import numpy as np
     HAS_NUMPY = True
@@ -24,7 +23,7 @@ def _np_eigh_sorted(cov):
     return w[idx], v[:, idx]
 
 
-# =========== CONFIG ===========
+# CONFIG
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_BASE_DIR = SCRIPT_DIR
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR
@@ -32,7 +31,7 @@ TEST_FIRST_ONLY = False
 
 ROTATION_ANGLES_DEG = [0, 90, 180, 270]
 
-# ==== Auto-pick free GPUs ====
+# Auto-pick free GPUs
 def get_free_gpus(threshold_mb=1000, max_gpus=1):
     try:
         res = subprocess.run(
@@ -111,9 +110,9 @@ def parse_args():
 addon_utils.enable("io_mesh_ply")
 
 
-# =========== UNIFIED RENDER SETTINGS ===========
+# UNIFIED RENDER SETTINGS
 def setup_render_settings():
-    """general render settings - consistent with other scripts"""
+    """general render settings"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     
@@ -166,7 +165,7 @@ def setup_render_settings():
     return scene
 
 
-# =========== UNIFIED LIGHTING ===========
+# UNIFIED LIGHTING
 def setup_lighting(center, target):
     """unified lighting settings"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -201,9 +200,9 @@ def setup_lighting(center, target):
     add_tracked_light('SPOT', (center.x, center.y - 320, center.z + 80), energy=120000, spot_deg=65)
 
 
-# =========== UNIFIED MATERIAL ===========
+# UNIFIED MATERIAL
 def create_tooth_material():
-    """unified tooth material - with AO for detail enhancement"""
+    """unified tooth material with AO for detail enhancement"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -236,7 +235,7 @@ def create_tooth_material():
     return mat
 
 
-# =========== ORIENTATION HELPERS ===========
+# ORIENTATION HELPERS
 def orient_top_view(model):
     dims = model.dimensions
     xyz = [dims.x, dims.y, dims.z]
@@ -353,9 +352,9 @@ def auto_flip_for_top_view(model, jaw_type: str):
             bpy.context.view_layer.update()
 
 
-# =========== UNIFIED MODEL PREP ===========
+# UNIFIED MODEL PREP
 def prepare_model(model, jaw_type: str):
-    """general model preparation - consistent with other scripts"""
+    """general model preparation"""
     # Material
     tooth_mat = create_tooth_material()
     if model.data.materials:
@@ -363,7 +362,7 @@ def prepare_model(model, jaw_type: str):
     else:
         model.data.materials.append(tooth_mat)
 
-    # Smooth + normals
+    # Smooth and normals
     bpy.ops.object.select_all(action='DESELECT')
     model.select_set(True)
     bpy.context.view_layer.objects.active = model
@@ -406,7 +405,7 @@ def prepare_model(model, jaw_type: str):
     bpy.context.view_layer.update()
 
 
-# =========== UNIFIED CAMERA ===========
+# UNIFIED CAMERA
 def setup_camera(model, margin=1.1):
     """unified orthographic camera setup"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -442,7 +441,7 @@ def setup_camera(model, margin=1.1):
     return cam, center, target
 
 
-# =========== MAIN ===========
+# MAIN
 def main():
     scene = setup_render_settings()
 

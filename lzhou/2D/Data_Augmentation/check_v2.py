@@ -1,23 +1,16 @@
 import pandas as pd
 from pathlib import Path
 
-# ============= CONFIGURATION =============
-# --- Add the full paths to any CSV files you want to check ---
+# CONFIGURATION
 FILES_TO_CHECK = [
     # Path to the new augmented dataset's labels
     "/home/user/lzhou/week10/output/augment_test/train_labels_augmented.csv",
-    
-    # Path to your original training set labels (if you have a CSV for it)
-    # "/path/to/your/original_train_labels.csv", 
-    
-    # Path to your test set labels
+    # Path to test set labels
     "/home/user/lzhou/week10/label_flipped.csv"
 ]
 
-# --- Label convention of the CSVs ---
-# If your CSVs use 1 for missing and 0 for present, this should be 0.
+#  Label convention of the CSVs
 VALUE_FOR_PRESENT = 0
-# =========================================
 
 # FDI Tooth Notation
 UPPER_TEETH_STR = [str(t) for t in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]]
@@ -30,7 +23,7 @@ def validate_jaw_alignment(csv_path):
     in an arch where it cannot physically exist.
     """
     filepath = Path(csv_path)
-    print(f"\n--- VALIDATING JAW ALIGNMENT IN: {filepath.name} ---")
+    print(f"\nVALIDATING JAW ALIGNMENT IN: {filepath.name}")
     
     if not filepath.exists():
         print(f" ERROR: File not found at '{csv_path}'. Skipping.")
@@ -76,7 +69,7 @@ def validate_jaw_alignment(csv_path):
                 'misaligned_teeth_present': misaligned_teeth
             })
 
-    # --- Print Summary Report ---
+    # Print Summary Report
     if not misaligned_rows:
         print(f" SUCCESS: No jaw misalignments found in '{filepath.name}'.")
     else:

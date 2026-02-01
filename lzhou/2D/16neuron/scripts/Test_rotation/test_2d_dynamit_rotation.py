@@ -29,16 +29,11 @@ try:
 except Exception as e:
     raise RuntimeError("This script requires torchvision. Please install torchvision.") from e
 
-
-# -------------------------
 # FDI ordering (jaw-specific 16)
-# -------------------------
 UPPER_FDI = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28]
 LOWER_FDI = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38]
 
-# -------------------------
 # Default paths
-# -------------------------
 DEFAULT_IMG_DIR = "/home/user/lzhou/week16-17/output/test_render"
 DEFAULT_CSV_PATH = "/home/user/lzhou/week10/label_flipped.csv"
 DEFAULT_CHECKPOINT = "/home/user/lzhou/week16-17/output/Train_rotation/16plus1teeth_dynamit/dynamit_best_2d_16plus1teeth.pth"
@@ -106,10 +101,7 @@ def get_free_gpus(threshold_mb=1000, max_gpus=2):
         print(f"Error detecting free GPUs: {e}\nFalling back to GPU 0")
         return [0]
 
-
-# -------------------------
 # Utilities
-# -------------------------
 def parse_args():
     p = argparse.ArgumentParser(
         description="2D test with 24-angle selection using the SAME jaw-confidence strategy as 3D."
@@ -122,8 +114,7 @@ def parse_args():
                    help="Output directory for results and selected images.")
     p.add_argument("--checkpoint", type=str, default=DEFAULT_CHECKPOINT, help="Model checkpoint path (.pth).")
 
-    # Model loading: simplest assumption is checkpoint contains full model via torch.save(model)
-    # If not, user can provide python file + class name to construct model and load state_dict.
+    # Model loading
     p.add_argument("--model_py", type=str,
                    default="/home/user/lzhou/week16-17/scripts/Train_rotation/Baseline_16plus1_dynamit_2d.py",
                    help="Optional: python file containing model class (e.g., /path/model_def.py).")
@@ -253,7 +244,7 @@ def normalize_jaw_value(v):
 
 def infer_is_lower_like_3d(row: pd.Series) -> int:
     """
-    If any upper FDI columns exist AND are not NaN -> upper, else lower.
+    If any upper FDI columns exist AND are not NaN for upper, else lower.
     """
     for t in UPPER_FDI:
         c = str(t)
@@ -269,7 +260,7 @@ def get_gt_for_case(
     case_id: Optional[str] = None,
     raw_id: Optional[str] = None,
 ) -> Tuple[List[int], int]:
-    # 1) jaw
+    # jaw
     is_lower = infer_is_lower_from_id(case_id)
     if is_lower is None:
         is_lower = infer_is_lower_from_id(raw_id)
@@ -280,7 +271,7 @@ def get_gt_for_case(
     if is_lower is None:
         is_lower = infer_is_lower_like_3d(row)
 
-    # 2) teeth16 (missing=1 present=0)
+    # teeth16 (missing=1 present=0)
     fdis = LOWER_FDI if is_lower == 1 else UPPER_FDI
     gt = []
     for t in fdis:
@@ -289,15 +280,13 @@ def get_gt_for_case(
             raise KeyError(f"CSV missing required FDI column: '{c}'")
         v = row[c]
         if pd.isna(v):
-            # If NaN occurs for in-jaw tooth columns, treat as present(0) by default.
-            # If your CSV uses NaN to mean "unknown", change this policy.
             x = 0
         else:
             x = int(float(v))
         if present_is_one:
-            # present=1 missing=0 -> convert to missing=1 present=0
+            # present=1 missing=0 convert to missing=1 present=0
             x = 1 - x
-        # now x should be missing (1) / present (0)
+        # now x should be missing (1) and present (0)
         gt.append(x)
 
     return gt, int(is_lower)
@@ -313,11 +302,6 @@ def build_transform(img_size: int, mean: List[float], std: List[float]):
 
 def load_model(checkpoint_path: str, device: torch.device,
                model_py: Optional[str], model_class: Optional[str], state_key: Optional[str]):
-    """
-    Flexible loader:
-    - If model_py+model_class provided: import class, instantiate, load state_dict from checkpoint dict.
-    - Else: try torch.load(checkpoint) as a full model.
-    """
     ckpt = torch.load(checkpoint_path, map_location="cpu")
 
     if model_py and model_class:
@@ -424,10 +408,7 @@ def load_image(path: Path, img_cache: Optional[Dict[str, Image.Image]]) -> Image
     with Image.open(path) as img:
         return img.convert("RGB")
 
-
-# -------------------------
 # Metrics
-# -------------------------
 def bin_metrics_from_counts(tp, fp, fn, tn):
     prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     rec  = tp / (tp + fn) if (tp + fn) > 0 else 0.0
@@ -443,7 +424,6 @@ def compute_jaw_aware_tooth_report(rows: List[dict]) -> pd.DataFrame:
     rows contains per-case:
       gt_is_lower, pred_is_lower, gt_teeth16 (len16), pred_teeth16 (len16)
     For upper cases, tooth indices correspond to UPPER_FDI ordering; for lower cases correspond to LOWER_FDI.
-    We create a 32-tooth report jaw-aware.
     """
     # Collect per-FDI truth/pred
     per_tooth = {t: {"truth": [], "pred": []} for t in (UPPER_FDI + LOWER_FDI)}
@@ -533,7 +513,7 @@ def compute_teeth_confusion(eval_rows: List[dict]) -> Tuple[Dict[str, int], List
 
 def save_confusion_matrix_plot(cm: List[List[int]], out_dir: Path):
     if plt is None:
-        print("Warning: matplotlib not available; skipping confusion matrix plot.")
+        print("Warning: matplotlib not available. Skipping confusion matrix plot.")
         return
     fig, ax = plt.subplots(figsize=(6, 5))
     im = ax.imshow(cm, cmap="Blues")
@@ -693,10 +673,7 @@ def macro_over_teeth_with_support(df_tooth: pd.DataFrame) -> Tuple[float,float,f
         float(d["balanced_accuracy"].mean()),
     )
 
-
-# -------------------------
 # Main
-# -------------------------
 def main():
     global available_gpus, device
     args = parse_args()
@@ -740,7 +717,7 @@ def main():
         else:
             csv_missing_imgs += 1
 
-    # keep only cases with labels + stable order
+    # keep only cases with labels and stable order
     case2imgs = {cid: sorted(paths) for cid, paths in case2imgs.items() if cid in df_case.index}
     if len(case2imgs) == 0:
         raise RuntimeError("No cases matched between images and CSV. Check --case_regex and --id_col.")
@@ -831,7 +808,7 @@ def main():
                 "score": score,
                 "jaw_prob": jaw_prob,
                 "pred_is_lower": pred_is_lower,
-                "logits": logits,          # cpu tensor[17]
+                "logits": logits,
                 "pred16": pred16,
             })
 

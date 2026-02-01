@@ -25,7 +25,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# ==================== CONFIGURATION ====================
+# CONFIGURATION
 # 3D JSON label roots
 JSON_ROOT_LOWER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower"
 JSON_ROOT_UPPER = "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
@@ -47,7 +47,7 @@ LAST_MODEL_FILENAME = "baseline_bce_last_2d_16plus1teeth.pth"
 PLOT_FILENAME = "training_metrics_16plus1teeth.png"
 METRICS_FILENAME = "detailed_metrics_16plus1teeth.json"
 
-# ==================== HYPERPARAMETERS ====================
+# HYPERPARAMETERS
 BATCH_SIZE = 32
 NUM_EPOCHS = 35
 LEARNING_RATE = 5e-4
@@ -61,7 +61,7 @@ BACKBONE = "resnet18"
 # Early stopping
 EARLY_STOPPING_PATIENCE = 10
 MIN_DELTA = 0.001
-EARLY_STOPPING_METRIC = "val_pr_auc_macro"  # "val_pr_auc_macro" or "val_macro_f1"
+EARLY_STOPPING_METRIC = "val_pr_auc_macro"
 
 # Label smoothing
 LABEL_SMOOTHING = 0.1
@@ -70,21 +70,15 @@ LABEL_SMOOTHING = 0.1
 DROPOUT_RATE = 0.5
 
 # Macro metrics settings
-MACRO_SUPPORT_MIN = 0  # Only include positions with >= this many positives (0 keeps all positions)
+MACRO_SUPPORT_MIN = 0
 
 # Threshold tuning
-THRESHOLD_STRATEGY = "per_position"  # "fixed" or "per_position"
+THRESHOLD_STRATEGY = "per_position"
 FIXED_TEETH_THRESHOLD = 0.5
 JAW_THRESHOLD = 0.5
 THRESHOLD_GRID = np.linspace(0.05, 0.95, 19)
 
-# FDI Notation - Now mapped to 16 positions
-# Position 1-8: Right to Left for one side
-# Upper teeth: 18,17,16,15,14,13,12,11 (right to left upper right) + 21,22,23,24,25,26,27,28 (left to right upper left)
-# Lower teeth: 48,47,46,45,44,43,42,41 (right to left lower right) + 31,32,33,34,35,36,37,38 (left to right lower left)
-# Mapping: positions 0-15 represent teeth from right to left
-
-# FDI labels for each position (same tooth number but different jaw)
+# FDI labels for each position
 POSITION_TO_FDI_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 POSITION_TO_FDI_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
 
@@ -189,7 +183,7 @@ def split_by_case_id(dataset, train_ratio, seed):
     return train_indices, val_indices
 
 
-# ==================== DATASET ====================
+# DATASET
 class Tooth2DDataset(Dataset):
     def __init__(self, img_roots, json_roots, image_suffix="_top.png", transform=None, is_training=True, cache_images=False):
         self.transform = transform
@@ -244,22 +238,9 @@ class Tooth2DDataset(Dataset):
         return set(data.get('labels', []))
 
     def create_tooth_missing_vector_16plus1(self, vertex_labels_set, jaw_type):
-        """
-        Create 16+1 output vector:
-        - First 16 positions: tooth missing status (1=missing, 0=present)
-        - Position 16 (index 16): jaw type (0=upper, 1=lower)
-        
-        Logic matches 3D PointNet:
-        1. Create presence vector (teeth in JSON = 1)
-        2. Invert to get missing vector (1=missing, 0=present)
-        3. Add jaw label
-        """
-        # Create 17-dimensional output
         output_vector = np.zeros(NUM_OUTPUTS, dtype=np.float32)
-        
-        # First, create tooth presence vector for this jaw
+        # Create tooth presence vector for this jaw
         tooth_presence = np.zeros(NUM_TEETH_POSITIONS, dtype=np.float32)
-        
         # Map FDI labels to positions based on jaw type
         if jaw_type == "upper":
             for fdi_label in vertex_labels_set:
@@ -274,7 +255,7 @@ class Tooth2DDataset(Dataset):
                     tooth_presence[pos] = 1.0
             jaw_label = 1.0  # Lower jaw = 1
         
-        # Invert to get missing vector (consistent with 32-neuron version)
+        # Invert to get missing vector
         tooth_missing = 1.0 - tooth_presence
         
         # Assign to output vector
@@ -298,7 +279,7 @@ class Tooth2DDataset(Dataset):
         return img, torch.from_numpy(tooth_labels).float(), jaw_type
 
 
-# ==================== MODEL ====================
+# MODEL
 class ResNetMultiLabel16Plus1(nn.Module):
     def __init__(self, backbone="resnet18", num_outputs=17, dropout_rate=0.5):
         super().__init__()
@@ -329,7 +310,7 @@ class ResNetMultiLabel16Plus1(nn.Module):
         return self.classifier(features)
 
 
-# ==================== LOSS FUNCTION ====================
+# LOSS FUNCTION
 class BCEWithLogitsLossSmoothed(nn.Module):
     def __init__(self, smoothing=0.1):
         super().__init__()
@@ -342,7 +323,7 @@ class BCEWithLogitsLossSmoothed(nn.Module):
         return self.bce(logits, targets)
 
 
-# ==================== METRICS ====================
+# METRICS
 def _expand_teeth_thresholds(thresholds):
     if thresholds is None:
         return np.full(NUM_TEETH_POSITIONS, 0.5, dtype=np.float32)
@@ -409,13 +390,6 @@ def compute_pr_auc(teeth_probs, teeth_targets):
 
 
 def calculate_metrics_16plus1(pred, target, teeth_thresholds=FIXED_TEETH_THRESHOLD, jaw_threshold=JAW_THRESHOLD):
-    """
-    Calculate metrics for 16+1 output:
-    - First 16: tooth missing classification
-    - Position 16: jaw classification
-    
-    Returns separate metrics for teeth and jaw
-    """
     pred_np = pred.cpu().numpy()
     target_np = target.cpu().numpy().astype(int)
     
@@ -483,10 +457,6 @@ def macro_from_positions(metrics_dict, support_min=1, jaw_filter=None):
 def calculate_per_position_metrics(
     pred, target, jaw_types, teeth_thresholds=FIXED_TEETH_THRESHOLD, jaw_threshold=JAW_THRESHOLD
 ):
-    """
-    Calculate per-position metrics (16 tooth positions)
-    Separately for upper and lower jaws
-    """
     pred_np = pred.cpu().numpy()
     target = target.cpu().numpy().astype(int)
     
@@ -503,7 +473,6 @@ def calculate_per_position_metrics(
     
     per_position_metrics = OrderedDict()
     
-    # Calculate metrics for each position, separated by jaw
     for pos, fdi_upper in enumerate(POSITION_TO_FDI_UPPER):
         # Upper jaw
         if upper_mask.sum() > 0:
@@ -648,7 +617,7 @@ def print_final_report_dynamit_style(pred_probs, targets):
     print("=" * 90 + "\n")
 
 
-# ==================== TRAINING ====================
+# TRAINING
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -735,7 +704,7 @@ def validate(model, dataloader, criterion, device):
     }, all_preds, all_labels, all_jaws
 
 
-# ==================== METRIC FORMATTING ====================
+# METRIC FORMATTING
 def _format_metric_for_support(value, support):
     """Format precision/recall/F1/accuracy for display; show n/a when no positives."""
     if support <= 0:
@@ -743,7 +712,7 @@ def _format_metric_for_support(value, support):
     return f"{value:>10.4f}"
 
 
-# ==================== PLOTTING ====================
+# PLOTTING
 def plot_training_curves(history, save_dir, filename):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
@@ -815,7 +784,7 @@ def plot_training_curves(history, save_dir, filename):
     print(f"Training plots saved to: {save_path}")
 
 
-# ==================== CUSTOM COLLATE ====================
+# CUSTOM COLLATE
 def collate_fn(batch):
     imgs = torch.stack([item[0] for item in batch])
     labels = torch.stack([item[1] for item in batch])
@@ -823,7 +792,7 @@ def collate_fn(batch):
     return imgs, labels, jaw_types
 
 
-# ==================== MAIN ====================
+# MAIN
 def main():
     global available_gpus, device
     set_seed(SEED)
@@ -986,7 +955,7 @@ def main():
         else:
             patience_counter += 1
             if patience_counter >= EARLY_STOPPING_PATIENCE:
-                print(f"\n✓ Early stopping at epoch {epoch+1}")
+                print(f"\n Early stopping at epoch {epoch+1}")
                 break
 
     print("\nLoading best model for final report...")

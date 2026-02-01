@@ -16,7 +16,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# ============= CONFIGURATION =============
+# CONFIGURATION
 DATA_PATHS = [
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower",
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
@@ -37,7 +37,7 @@ BEST_MODEL_FILENAME = "dynamit_best_2d_16plus1teeth.pth"
 METRICS_FILENAME = "detailed_metrics_dynamit_16plus1teeth.json"
 PLOT_FILENAME = "training_metrics_dynamit_16plus1teeth.png"
 
-# --- HYPERPARAMETERS ---
+# HYPERPARAMETERS
 BATCH_SIZE = 32
 NUM_EPOCHS = 35
 LEARNING_RATE = 5e-4
@@ -60,10 +60,7 @@ LOWER_FDI = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
 UPPER_TO_IDX = {fdi: i for i, fdi in enumerate(UPPER_FDI)}
 LOWER_TO_IDX = {fdi: i for i, fdi in enumerate(LOWER_FDI)}
 
-# =========================================
 #  LOSS FUNCTION
-# =========================================
-
 class Dynamit_Loss(nn.Module):
     def __init__(self, device):
         super().__init__()
@@ -94,10 +91,7 @@ class Dynamit_Loss(nn.Module):
         weights = torch.cat([weights, torch.ones_like(targets[:,16:17])], dim=1)
         return F.binary_cross_entropy_with_logits(predictions, targets, weight=weights)
 
-# =========================================
 #  UTILS
-# =========================================
-
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -129,10 +123,7 @@ def split_by_case_id(dataset, train_ratio, seed):
 
     return train_indices, val_indices
 
-# =========================================
 #  DATASET
-# =========================================
-
 class Tooth2DDataset(Dataset):
     def __init__(self, data_paths, img_roots, image_suffix="_top.png", transform=None, cache_images=False):
         self.transform = transform
@@ -270,10 +261,7 @@ def plot_training_curves(history, save_dir, filename):
     plt.close()
     print(f"Training plots saved to: {save_path}")
 
-# =========================================
 #  MODEL
-# =========================================
-
 class ResNet16Plus1(nn.Module):
     def __init__(self, backbone="resnet18", dropout_rate=0.5):
         super().__init__()
@@ -305,10 +293,7 @@ class ResNet16Plus1(nn.Module):
         jaw = self.out_jaw(self.drop(F.relu(self.bn_jaw(self.fc_jaw(shared)))))
         return torch.cat([teeth, jaw], dim=1)
 
-# =========================================
-#  METRICS & LOOP
-# =========================================
-
+#  METRICS and LOOP
 def calculate_metrics(logits, targets):
     pred = (torch.sigmoid(logits.float()) > 0.5).cpu().numpy().astype(int)
     tgt = targets.float().cpu().numpy().astype(int)
@@ -442,10 +427,7 @@ def print_final_report(model, loader, device):
         }, f, indent=2)
     print(f"Metrics saved to: {metrics_file}")
 
-# =========================================
 #  MAIN
-# =========================================
-
 def main():
     set_seed(SEED)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

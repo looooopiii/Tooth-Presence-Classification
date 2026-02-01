@@ -28,9 +28,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# =================================================================================
 # CONFIGURATION
-# =================================================================================
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 MODEL_PATH = "/home/user/lzhou/week15-32/output/Train2D/32teeth_dynamit/dynamit_best_2d_32teeth.pth"
@@ -38,13 +36,13 @@ OUTPUT_DIR = "/home/user/lzhou/week16-32/output/Test2D/32teeth_dynamit_auto_best
 
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-# ========== HYPERPARAMETERS ==========
+# HYPERPARAMETERS
 IMG_SIZE = 256  
 NUM_TEETH = 32
 NUM_SAMPLE_PREDICTIONS = 10
 DROPOUT_RATE = 0.5  
 
-# ========== FUSION STRATEGY SELECTION ==========
+# FUSION STRATEGY SELECTION
 # 'balanced_accuracy', 'macro_recall', 'macro_f1', 'macro_precision'
 SELECTION_METRIC = 'macro_f1'
 
@@ -71,9 +69,7 @@ LOWER_FDI = [31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48]
 UPPER_INDICES = [FDI_TO_INDEX[fdi] for fdi in UPPER_FDI]
 LOWER_INDICES = [FDI_TO_INDEX[fdi] for fdi in LOWER_FDI]
 
-# =================================================================================
 # FUSION STRATEGIES
-# =================================================================================
 def fuse_average(probs_list):
     """Simple average of all angles"""
     return np.mean(probs_list, axis=0)
@@ -166,9 +162,7 @@ FUSION_STRATEGIES = {
     'jaw_confidence': None  # Special handling needed
 }
 
-# =================================================================================
 # ID NORMALIZATION HELPER FUNCTION
-# =================================================================================
 def normalize_png_stem_to_newid(stem: str) -> str:
     """
     Cleans up filenames to match CSV IDs.
@@ -212,9 +206,7 @@ def normalize_png_stem_to_newid(stem: str) -> str:
         
     return new_id.lower()
 
-# =================================================================================
 # MODEL DEFINITION
-# =================================================================================
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -243,9 +235,7 @@ class ResNetMultiLabel(nn.Module):
         features = self.backbone(x)
         return self.classifier(features)
 
-# =================================================================================
 # DATA LOADING
-# =================================================================================
 def load_test_labels(csv_path):
     """Load test labels with jaw type handling."""
     df = pd.read_csv(csv_path, dtype={'new_id': str})
@@ -322,9 +312,7 @@ def find_test_images(img_dir, labels_dict):
     
     return grouped
 
-# =================================================================================
 # INFERENCE WITH STRATEGY
-# =================================================================================
 def test_model_with_strategy(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, strategy_name):
     """Run inference with a specific fusion strategy."""
     model.eval()
@@ -366,9 +354,7 @@ def test_model_with_strategy(model, grouped_imgs, labels_dict, jaw_type_dict, de
             
     return np.array(all_preds), np.array(all_targets), all_ids
 
-# =================================================================================
 # METRICS CALCULATION
-# =================================================================================
 def calculate_metrics(preds, targets, jaw_type_dict, all_ids):
     """Calculate comprehensive metrics."""
     if len(preds) == 0:
@@ -452,9 +438,7 @@ def calculate_metrics(preds, targets, jaw_type_dict, all_ids):
         'per_tooth': per_tooth
     }
 
-# =================================================================================
 # PRINTING FUNCTIONS
-# =================================================================================
 def print_strategy_comparison(all_results, selection_metric):
     """Print comparison table of all strategies."""
     print("\n" + "=" * 120)
@@ -766,9 +750,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir):
     
     print(f" Detailed plots saved to {save_dir}")
 
-# =================================================================================
 # MAIN
-# =================================================================================
 def main():
     print("\n" + "=" * 80)
     print(" " * 10 + "2D MODEL TESTING - Fixed Strategy (Dynamic Loss Model)")
@@ -803,7 +785,7 @@ def main():
     labels_dict, jaw_type_dict = load_test_labels(TEST_LABELS_CSV)
     print(f"   Loaded labels for {len(labels_dict)} cases")
     
-    # Load Images & Match
+    # Load Images and Match
     print(f"\n[4/6] Finding test images in: {TEST_IMG_DIR}")
     grouped_imgs = find_test_images(TEST_IMG_DIR, labels_dict)
     

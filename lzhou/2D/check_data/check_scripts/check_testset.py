@@ -219,14 +219,14 @@ def analyze_test_set_corrected():
     CORRECTED VERSION: Analyzes tooth presence/absence with jaw-specific counting.
     
     Uses filename to separate upper and lower jaws, then:
-    - Upper teeth (11-28) counted against upper jaw rows only
-    - Lower teeth (31-48) counted against lower jaw rows only
+    Upper teeth (11-28) counted against upper jaw rows only
+    Lower teeth (31-48) counted against lower jaw rows only
     """
     input_csv = INPUT_CSV
     output_dir = OUTPUT_DIR
     render_root = RENDER_ROOT
 
-    # --- Setup ---
+    # Setup
     os.makedirs(output_dir, exist_ok=True)
     
     try:
@@ -316,7 +316,7 @@ def analyze_test_set_corrected():
         print(f"   Duplicate examples (first 5):")
         print(dup_samples[['filename', 'new_id', 'image_path']].head().to_string(index=False))
 
-    # --- Separate by jaw type using cleaned rows ---
+    # Separate by jaw type using cleaned rows
     upper_df = dedup_df[dedup_df['jaw_type'] == 'upper'].copy()
     lower_df = dedup_df[dedup_df['jaw_type'] == 'lower'].copy()
     
@@ -333,7 +333,7 @@ def analyze_test_set_corrected():
     print(f"   Upper jaw rows: {upper_count}")
     print(f"   Lower jaw rows: {lower_count}")
     
-    # --- Identify tooth columns ---
+    # Identify tooth columns
     tooth_columns = [col for col in dedup_df.columns if str(col).isdigit()]
     tooth_ids = sorted([int(c) for c in tooth_columns])
     
@@ -341,7 +341,7 @@ def analyze_test_set_corrected():
     print(f"   Total tooth columns: {len(tooth_columns)}")
     print(f"   Tooth IDs: {tooth_ids}")
     
-    # --- CORRECTED: Calculate statistics with JAW-SPECIFIC counting ---
+    # CORRECTED: Calculate statistics with JAW-SPECIFIC counting
     print(f"\n  Applying jaw-specific counting...")
     
     results = []
@@ -387,12 +387,12 @@ def analyze_test_set_corrected():
     results_df = pd.DataFrame(results)
     results_df = results_df.sort_values('ToothID')
     
-    # --- Save data to CSV ---
+    # Save data to CSV
     csv_path = os.path.join(output_dir, 'tooth_counts_corrected.csv')
     results_df.to_csv(csv_path, index=False)
     print(f"\n Corrected data saved to: {csv_path}")
     
-    # --- Print summary ---
+    # Print summary
     print("\n" + "="*80)
     print(" CORRECTED STATISTICS SUMMARY")
     print("="*80)
@@ -409,12 +409,12 @@ def analyze_test_set_corrected():
     else:
         print("No teeth with absence rate > 20%")
 
-    # --- Prepare data for plotting ---
+    # Prepare data for plotting
     tooth_ids_list = results_df['ToothID'].tolist()
     presence = results_df['Present_Count'].tolist()
     absence = results_df['Absent_Count'].tolist()
     
-    # --- Plotting ---
+    # Plotting
     
     # Plot 1: Stacked Bar Chart with Jaw Separation
     fig_stacked, ax_stacked = plt.subplots(figsize=(16, 8))
@@ -486,7 +486,7 @@ def analyze_test_set_corrected():
     print(f" Absence rate chart saved to: {rate_plot_path}")
     plt.close(fig_rate)
     
-    # Plot 3: Comparison - Before vs After (Conceptual)
+    # Plot 3: Comparison - Before vs After
     print(f"\n Generating before/after comparison...")
 
     # Calculate "incorrect" statistics for comparison

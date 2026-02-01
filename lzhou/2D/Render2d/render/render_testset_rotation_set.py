@@ -9,7 +9,6 @@ import sys
 import os
 import subprocess
 
-# Try to use numpy for PCA-based upright orientation (falls back if missing)
 try:
     import numpy as np
     HAS_NUMPY = True
@@ -24,16 +23,14 @@ def _np_eigh_sorted(cov):
     return w[idx], v[:, idx]
 
 
-# =========== CONFIG ===========
+# CONFIG
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_BASE_DIR = SCRIPT_DIR
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR
 TEST_FIRST_ONLY = False
 
-# ==============================
 # Rotation Set
 # (X_deg, Y_deg, Z_deg)
-# ==============================
 ROTATION_SET = (
     [(0, 0, z) for z in [0, 45, 90, 135, 180, 225, 270, 315]] +
     [(90, 0, z) for z in [0, 90, 180, 270]] +
@@ -42,7 +39,7 @@ ROTATION_SET = (
     [(0, -90, z) for z in [0, 90, 180, 270]]
 )
 
-# ==== Auto-pick free GPUs ====
+# free GPUs
 def get_free_gpus(threshold_mb=1000, max_gpus=1):
     try:
         res = subprocess.run(
@@ -132,9 +129,9 @@ addon_utils.enable("io_mesh_ply")
 addon_utils.enable("io_mesh_stl")
 
 
-# =========== UNIFIED RENDER SETTINGS ===========
+# UNIFIED RENDER SETTINGS
 def setup_render_settings():
-    """general render settings - consistent with other scripts"""
+    """general render settings"""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
 
@@ -187,7 +184,7 @@ def setup_render_settings():
     return scene
 
 
-# =========== UNIFIED LIGHTING ===========
+# UNIFIED LIGHTING
 def setup_lighting(center, target):
     """unified lighting settings"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -224,9 +221,9 @@ def setup_lighting(center, target):
     return target
 
 
-# =========== MATERIAL ===========
+# MATERIAL
 def create_tooth_material():
-    """unified tooth material - with AO for detail enhancement"""
+    """unified tooth material with AO for detail enhancement"""
     mat = bpy.data.materials.new(name="ToothMaterial_Unified")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -259,7 +256,7 @@ def create_tooth_material():
     return mat
 
 
-# =========== ORIENTATION HELPERS ===========
+# ORIENTATION HELPERS
 def orient_top_view(model):
     dims = model.dimensions
     xyz = [dims.x, dims.y, dims.z]
@@ -377,7 +374,7 @@ def auto_flip_for_top_view(model, jaw_type: str):
 
 
 def prepare_model(model, jaw_type: str):
-    """general model preparation - consistent with other scripts"""
+    """general model preparation"""
     # Material
     tooth_mat = create_tooth_material()
     if model.data.materials:
@@ -428,7 +425,7 @@ def prepare_model(model, jaw_type: str):
     bpy.context.view_layer.update()
 
 
-# =========== UNIFIED CAMERA ===========
+# UNIFIED CAMERA
 def setup_camera(model, margin=1.1):
     """unified orthographic camera setup"""
     bpy.ops.object.select_all(action='DESELECT')
@@ -464,7 +461,7 @@ def setup_camera(model, margin=1.1):
     return cam, center, target
 
 
-# =========== ROTATION APPLY ===========
+# ROTATION APPLY
 def apply_rotation_xyz(model, base_rot_euler, x_deg, y_deg, z_deg):
     """
     Apply rotations in XYZ order on top of base_rot_euler.
@@ -513,7 +510,7 @@ def infer_jaw_type_from_name(name: str):
     return "unknown"
 
 
-# =========== MAIN ===========
+# MAIN
 def main():
     args, base_dir, out_dir, render_all = parse_args()
     set_cuda_visible_devices_if_needed(max_gpus=args.max_gpus)
@@ -544,7 +541,7 @@ def main():
     else:
         in_files = sorted(list(base_dir.rglob(f"*.{ext}")))
         if not in_files:
-            print(f"No *.{ext} files found in {base_dir}")
+            print(f"No .{ext} files found in {base_dir}")
             return
 
         if render_all or (tmp_args.max is None):

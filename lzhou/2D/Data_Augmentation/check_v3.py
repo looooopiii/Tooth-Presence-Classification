@@ -1,15 +1,12 @@
 import pandas as pd
 from pathlib import Path
 
-# ============= CONFIGURATION =============
-# --- Path to the new CSV file you want to analyze ---
+# CONFIGURATION
 RANDOM_AUGMENT_CSV = "/home/user/lzhou/week10/output/augment_random/train_labels_random.csv"
 
-# --- Label convention of the CSV ---
-# Your CSVs use 1 for missing and 0 for present.
+# Label convention of the CSV
 VALUE_FOR_MISSING = 1
 VALUE_FOR_PRESENT = 0
-# =========================================
 
 # FDI Tooth Notation
 UPPER_TEETH_STR = [str(t) for t in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]]
@@ -22,7 +19,7 @@ def analyze_dataset(csv_path):
     calculates the frequency of missing teeth.
     """
     filepath = Path(csv_path)
-    print(f"--- ANALYZING DATASET: {filepath.name} ---")
+    print(f" ANALYZING DATASET: {filepath.name}")
 
     if not filepath.exists():
         print(f"\n ERROR: File not found at '{csv_path}'. Please check the path and try again.")
@@ -35,7 +32,7 @@ def analyze_dataset(csv_path):
         print(f"\n ERROR: Could not load or process the CSV file: {e}")
         return
 
-    # --- Analysis Step 1: Jaw Alignment Validation ---
+    # Analysis Step 1: Jaw Alignment Validation
     print("\n[1/2] Checking for jaw alignment errors...")
     misaligned_rows = []
     for index, row in df.iterrows():
@@ -57,14 +54,14 @@ def analyze_dataset(csv_path):
         for entry in misaligned_rows[:5]:
             print(f"  - Row {entry['row']}: A '{entry['scan_jaw']}' scan incorrectly has tooth {entry['error_tooth']} marked as present.")
 
-    # --- Analysis Step 2: Missing Tooth Frequency Count ---
+    # Analysis: Missing Tooth Frequency Count
     print("\n[2/2] Calculating missing tooth frequency...")
     
     # Ensure all tooth columns are treated as numeric for summation
     tooth_columns = [col for col in ALL_TEETH_STR if col in df.columns]
     missing_counts = df[tooth_columns].sum(axis=0)
 
-    print("\n--- Frequency of Missing Teeth (Total Samples: {}) ---".format(len(df)))
+    print("\nFrequency of Missing Teeth (Total Samples: {})".format(len(df)))
     print("-" * 55)
     print(f"{'Upper Right':<28}{'Upper Left':<28}")
     for i in range(8):
@@ -80,7 +77,7 @@ def analyze_dataset(csv_path):
         print(f"  Tooth {r_tooth}: {r_count:<5} missing      |    Tooth {l_tooth}: {l_count:<5} missing")
     print("-" * 55)
     
-    print("\n--- ANALYSIS COMPLETE ---")
+    print("\nANALYSIS COMPLETE")
 
 if __name__ == "__main__":
     analyze_dataset(RANDOM_AUGMENT_CSV)

@@ -29,9 +29,7 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, resnet50
 
-# =================================================================================
 # FUSION STRATEGY ENUM
-# =================================================================================
 class FusionStrategy(Enum):
     AVERAGE = "average"
     MAX_CONFIDENCE = "max_confidence"
@@ -41,13 +39,11 @@ class FusionStrategy(Enum):
     WEIGHTED_AVERAGE = "weighted_average"
     JAW_CONFIDENCE = "jaw_confidence"
 
-# =================================================================================
 # CONFIGURATION
-# =================================================================================
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
 TEST_LABELS_CSV = "/home/user/lzhou/week10/label_flipped.csv"
 
-# ========== use Augmented Dynamit model ==========
+# Use Augmented Dynamit model
 MODEL_PATH = "/home/user/lzhou/week16-32/output/Train2D/Augmented_32teeth_dynamit/augmented_dynamit_best_2d_32teeth.pth"
 OUTPUT_DIR = "/home/user/lzhou/week16-32/output/Test2D/aug_dynamit_32teeth"
 
@@ -72,9 +68,7 @@ INDEX_TO_FDI = {i: fdi_label for fdi_label, i in FDI_TO_INDEX.items()}
 UPPER_FDI = [11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28]
 LOWER_FDI = [31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48]
 
-# =================================================================================
 # ID NORMALIZATION HELPER
-# =================================================================================
 def normalize_png_stem_to_newid(stem: str) -> str:
     """Cleans up filenames to match CSV IDs."""
     s = stem.replace('-', '_').strip()
@@ -116,9 +110,7 @@ def normalize_png_stem_to_newid(stem: str) -> str:
         
     return new_id.lower()
 
-# =================================================================================
 # MODEL DEFINITION
-# =================================================================================
 class ResNetMultiLabel(nn.Module):
     def __init__(self, backbone="resnet18", num_teeth=32, dropout_rate=0.5):
         super().__init__()
@@ -147,9 +139,7 @@ class ResNetMultiLabel(nn.Module):
         features = self.backbone(x)
         return self.classifier(features)
 
-# =================================================================================
 # FUSION METHODS
-# =================================================================================
 def calculate_confidence_score(probs):
     return np.mean(np.abs(probs - 0.5))
 
@@ -205,9 +195,7 @@ def fuse_predictions(probs_list, strategy=FusionStrategy.AVERAGE, n_best=2, jaw_
     else:
         return np.mean(probs_array, axis=0)
 
-# =================================================================================
 # DATA LOADING
-# =================================================================================
 def load_test_labels(csv_path):
     """Load test labels with jaw type handling."""
     df = pd.read_csv(csv_path, dtype={'new_id': str})
@@ -327,9 +315,7 @@ def find_test_images(img_dir, labels_dict):
     
     return grouped
 
-# =================================================================================
 # INFERENCE
-# =================================================================================
 def test_model(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform, 
                strategy=FusionStrategy.AVERAGE, n_best=2, show_progress=True):
     model.eval()
@@ -383,9 +369,7 @@ def test_model(model, grouped_imgs, labels_dict, jaw_type_dict, device, transfor
             
     return np.array(all_preds), np.array(all_targets), all_ids, fusion_stats
 
-# =================================================================================
 # METRICS CALCULATION
-# =================================================================================
 def calculate_metrics(preds, targets, jaw_type_dict, all_ids):
     """Calculate comprehensive metrics."""
     if len(preds) == 0:
@@ -483,13 +467,7 @@ def get_metric_value(metrics, metric_name):
     else:
         return metrics['overall_micro']['balanced_accuracy']
 
-# =================================================================================
-# COMPARISON OF ALL STRATEGIES - REMOVED
-# =================================================================================
-# The original compare_all_strategies / print_comparison_table / generate_comparison_plot
-# utilities have been removed. This script now runs a single fixed fusion strategy
-# defined by FIXED_STRATEGY (BEST_N_ANGLES) to simplify testing.
-
+# COMPARISON OF ALL STRATEGIES
 def run_fixed_strategy(model, grouped_imgs, labels_dict, jaw_type_dict, device, transform):
     """Run inference using the fixed strategy and return a results dict keyed by strategy name."""
     strategy = FIXED_STRATEGY
@@ -517,9 +495,7 @@ def run_fixed_strategy(model, grouped_imgs, labels_dict, jaw_type_dict, device, 
 
     return results
 
-# =================================================================================
 # OUTPUT FUNCTIONS
-# =================================================================================
 def print_metrics_summary(metrics, strategy_name):
     """Print detailed metrics summary for the best strategy."""
     micro = metrics['overall_micro']
@@ -660,9 +636,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir, strategy_name):
     
     print(f" Detailed plots saved to {save_dir}")
 
-# =================================================================================
 # MAIN
-# =================================================================================
 def main():
     print("\n" + "="*80)
     print(" "*5 + "AUGMENTED MODEL TESTING - MULTI-ANGLE FUSION")

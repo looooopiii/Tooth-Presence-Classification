@@ -9,7 +9,7 @@ import multiprocessing as mp
 from datetime import datetime
 from tqdm import tqdm
 
-# ============= CONFIGURATION =============
+# CONFIGURATION
 ORIGINAL_TRAIN_DATA_PATHS = [
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/lower",
     "/local/scratch/datasets/Medical/TeethSeg/3DTeethLand_challenge_train_test_split/upper"
@@ -20,7 +20,7 @@ FILL_BASE = True
 BASE_COLOR = (0.85, 0.70, 0.70)
 RANDOM_SEED = 42
 COPIES_PER_SCAN = 2
-DEBUG_LIMIT = None  # Set to an integer for debugging with fewer samples
+DEBUG_LIMIT = None 
 CPU_COUNT = os.cpu_count() or 1
 DEFAULT_WORKERS = max(1, CPU_COUNT - 1)
 WORKERS = int(os.getenv("AUG_WORKERS", str(DEFAULT_WORKERS)))
@@ -40,12 +40,8 @@ BASE_PROB = 0.30
 UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 LOWER_TEETH = [38, 37, 36, 35, 34, 33, 32, 31, 41, 42, 43, 44, 45, 46, 47, 48]
 ALL_TEETH = sorted(UPPER_TEETH + LOWER_TEETH)
-# =========================================
 
-
-# =========================================
 # HELPER FUNCTIONS
-# =========================================
 def load_all_train_samples():
     """Loads all available training samples from the specified paths."""
     samples = {'upper': [], 'lower': []}
@@ -92,10 +88,6 @@ def _read_obj_cached(obj_path):
     }
 
 def _order_loop(adj, start):
-    """
-    Given an undirected adjacency mapping {v: set(neighbors)} for a single loop,
-    return an ordered list of vertices following the boundary.
-    """
     loop = [start]
     prev = None
     cur = start
@@ -108,18 +100,11 @@ def _order_loop(adj, start):
             break
         loop.append(nxt)
         prev, cur = cur, nxt
-        if len(loop) > 200000:  # safety guard
+        if len(loop) > 200000:
             break
     return loop
 
 def extract_boundary_loops(vertices_to_remove, face_lines):
-    """
-    Build ordered boundary loops (each loop is a list of kept-vertex indices)
-    around regions that will be removed. We collect edges from faces that mix
-    removed and kept vertices, then split them into connected components and
-    order each component along the loop.
-    """
-    # Parse faces into lists of vertex indices (tolerate v/vt/vn tokens)
     faces = []
     for fl in face_lines:
         parts = fl.strip().split()[1:]
@@ -133,7 +118,7 @@ def extract_boundary_loops(vertices_to_remove, face_lines):
         if len(vids) >= 2:
             faces.append(vids)
 
-    kept_kept_edges = []  # boundary candidate edges (both endpoints kept) from mixed faces
+    kept_kept_edges = []
     for vids in faces:
         has_removed = any(v in vertices_to_remove for v in vids)
         has_kept = any(v not in vertices_to_remove for v in vids)
@@ -178,7 +163,6 @@ def extract_boundary_loops(vertices_to_remove, face_lines):
     return loops
 
 def _parse_face_verts(face_line: str):
-    """Parse an OBJ face line 'f v[/vt[/vn]] ...' -> list of vertex ids (int)."""
     parts = face_line.strip().split()
     vids = []
     for tok in parts[1:]:
@@ -192,9 +176,9 @@ def _build_boundary_components(vertices_to_remove, face_lines):
     Build boundary components using edge kept/removed adjacency counting.
     Returns: list of dicts [{'vertices': set([...]), 'edges': [(u,v), ...]}, ...]
     """
-    # 1) Parse faces and classify
+    # Parse faces and classify
     faces = []
-    face_types = []  # 'kept' | 'removed'
+    face_types = []
     for fl in face_lines:
         vids = _parse_face_verts(fl)
         if len(vids) < 2:
@@ -203,7 +187,7 @@ def _build_boundary_components(vertices_to_remove, face_lines):
         is_removed = any(v in vertices_to_remove for v in vids)
         face_types.append('removed' if is_removed else 'kept')
 
-    # 2) Edge counts
+    # Edge counts
     from collections import defaultdict
     edge_cnt = defaultdict(lambda: {'kept': 0, 'removed': 0})
     for vids, ftype in zip(faces, face_types):
@@ -213,20 +197,20 @@ def _build_boundary_components(vertices_to_remove, face_lines):
             key = (a, b) if a < b else (b, a)
             edge_cnt[key][ftype] += 1
 
-    # 3) Boundary edges (kept vs removed on the two sides)
+    # Boundary edges (kept vs removed on the two sides)
     boundary_edges = []
     for (u, v), cnt in edge_cnt.items():
         if cnt['kept'] > 0 and cnt['removed'] > 0:
             if (u not in vertices_to_remove) and (v not in vertices_to_remove):
                 boundary_edges.append((u, v))
 
-    # 4) Build graph
+    # Build graph
     adj = {}
     for u, v in boundary_edges:
         adj.setdefault(u, set()).add(v)
         adj.setdefault(v, set()).add(u)
 
-    # 5) Connected components and collect edges
+    # Connected components and collect edges
     components = []
     visited = set()
     nodes = set(adj.keys())
@@ -439,9 +423,7 @@ def _process_train_sample(args):
         })
     return rows
 
-# =========================================
 # MAIN EXECUTION
-# =========================================
 def main():
     random.seed(RANDOM_SEED); np.random.seed(RANDOM_SEED)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
