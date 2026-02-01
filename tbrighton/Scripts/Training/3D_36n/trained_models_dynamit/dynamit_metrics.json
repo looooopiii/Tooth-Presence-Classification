@@ -1,0 +1,7 @@
+{
+  "overall_precision": 0.4694451844305879,
+  "overall_recall": 0.4533882383818425,
+  "overall_f1": 0.43546688150105106,
+  "overall_accuracy": 0.9550729903605704,
+  "jaw_accuracy": 0.9972222222222222
+}

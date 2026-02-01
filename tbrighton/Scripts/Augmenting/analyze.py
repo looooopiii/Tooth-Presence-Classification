@@ -40,22 +40,19 @@ def plot_tooth_frequencies(missing_counts, present_counts, labels, save_path):
     print(f"\n✓ Chart saved to: {save_path}")
 
 def analyze_dataset(csv_path):
-    """
-    Performs a full analysis of the dataset: validates jaw alignment,
-    calculates frequencies, and plots the results.
-    """
+    """calculates frequencies, and plots the results."""
     filepath = Path(csv_path)
     print(f"--- ANALYZING DATASET: {filepath.name} ---")
 
     if not filepath.exists():
-        print(f"\n❌ ERROR: File not found at '{csv_path}'. Please check the path and try again.")
+        print(f"\n ERROR: File not found at '{csv_path}'. Please check the path and try again.")
         return
 
     try:
         df = pd.read_csv(filepath)
         print(f"  Successfully loaded {len(df)} rows.")
     except Exception as e:
-        print(f"\n❌ ERROR: Could not load or process the CSV file: {e}")
+        print(f"\n ERROR: Could not load or process the CSV file: {e}")
         return
 
     # --- Analysis Step 1: Jaw Alignment Validation ---
@@ -70,9 +67,9 @@ def analyze_dataset(csv_path):
                 misaligned_rows.append({'row': index + 1, 'scan_jaw': jaw_type, 'error_tooth': tooth_col})
     
     if not misaligned_rows:
-        print("✅ SUCCESS: No jaw misalignments found. Data integrity is solid.")
+        print(" SUCCESS: No jaw misalignments found. Data integrity is solid.")
     else:
-        print(f"⚠️ WARNING: Found {len(misaligned_rows)} rows with misaligned labels!")
+        print(f" WARNING: Found {len(misaligned_rows)} rows with misaligned labels!")
         for entry in misaligned_rows[:5]:
             print(f"  - Row {entry['row']}: A '{entry['scan_jaw']}' scan incorrectly has tooth {entry['error_tooth']} marked as present.")
 
