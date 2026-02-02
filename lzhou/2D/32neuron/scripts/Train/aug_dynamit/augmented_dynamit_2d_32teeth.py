@@ -21,9 +21,9 @@ from torchvision.models import resnet18, resnet50
 import json
 
 # Dataset Training
-USE_ORIGINAL = True   # if use original dataset
-USE_AUGMENTED = True  # if use augmented dataset
-USE_RANDOM = True     # if use random augmented
+USE_ORIGINAL = True
+USE_AUGMENTED = True
+USE_RANDOM = True
 
 # Original dataset roots
 # 3D JSON label roots
@@ -105,7 +105,6 @@ def get_free_gpus(threshold_mb=1000, max_gpus=2):
 
 
 def set_seed(seed):
-    """set random seed for reproducibility"""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -672,7 +671,6 @@ def main():
     if len(available_gpus) > 1:
         model = torch.nn.DataParallel(model, device_ids=available_gpus)
 
-    # KEY DIFFERENCE: Dynamit Loss instead of BCE
     criterion = Dynamit_Loss()
     
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)

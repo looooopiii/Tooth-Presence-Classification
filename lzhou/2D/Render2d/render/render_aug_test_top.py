@@ -148,7 +148,7 @@ def create_tooth_material():
     return mat
 
 
-# ============== HOLE FILLING UTILITY ===============
+# HOLE FILLING UTILITY
 def fill_holes_in_object(obj, smooth_factor=0.2):
     """Fill all boundary holes and lightly smooth the patched area."""
     me = obj.data

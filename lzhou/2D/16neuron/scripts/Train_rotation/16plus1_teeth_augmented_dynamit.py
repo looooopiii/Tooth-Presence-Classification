@@ -323,7 +323,7 @@ def build_original_samples(img_roots, json_roots, image_suffix=".png", cache_ima
     return samples
 
 
-# ==================== Dynamic Loss ====================
+# Dynamic Loss
 class DynamitLoss16Plus1(nn.Module):
     """
     Combined loss for 16+1 architecture:

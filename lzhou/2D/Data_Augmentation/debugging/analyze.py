@@ -90,7 +90,7 @@ def analyze_dataset(csv_path):
         print(f"  {tooth:<13} {missing:<20} {present}")
     print("-" * 50)
     
-    # Analysis Step 3: Plotting
+    # Analysis: Plotting
     print("\n[3/3] Generating frequency distribution plot...")
     plot_save_path = filepath.parent / "tooth_presence_absence_counts.png"
     plot_tooth_frequencies(missing_counts, present_counts, ALL_TEETH_STR, plot_save_path)

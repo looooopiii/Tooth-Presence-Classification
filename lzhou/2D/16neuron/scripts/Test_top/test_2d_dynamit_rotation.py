@@ -101,10 +101,7 @@ def get_free_gpus(threshold_mb=1000, max_gpus=2):
         print(f"Error detecting free GPUs: {e}\nFalling back to GPU 0")
         return [0]
 
-
-# -------------------------
 # Utilities
-# -------------------------
 def parse_args():
     p = argparse.ArgumentParser(
         description="2D test with 24-angle selection."

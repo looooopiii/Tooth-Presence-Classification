@@ -606,9 +606,7 @@ def print_sample_predictions(ids, preds, targets, jaw_type_dict, num_samples):
     
     print("\n" + "=" * 80)
 
-# =================================================================================
 # PLOTTING FUNCTIONS
-# =================================================================================
 def generate_comparison_plot(all_results, save_dir):
     """Generate comparison plot for all strategies."""
     strategies = list(all_results.keys())
@@ -697,7 +695,7 @@ def generate_detailed_plots(metrics, preds, targets, save_dir):
     plt.savefig(Path(save_dir) / "f1_score_per_jaw_dynamit.png", dpi=150)
     plt.close()
     
-    # Recall per Jaw (Key Metric)
+    # Recall per Jaw
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     
     upper_recalls = [per_tooth[fdi]['recall'] for fdi in UPPER_FDI]

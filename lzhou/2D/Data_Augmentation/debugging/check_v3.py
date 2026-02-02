@@ -32,7 +32,7 @@ def analyze_dataset(csv_path):
         print(f"\n ERROR: Could not load or process the CSV file: {e}")
         return
 
-    # Analysis Step 1: Jaw Alignment Validation
+    # Analysis: Jaw Alignment Validation
     print("\n[1/2] Checking for jaw alignment errors...")
     misaligned_rows = []
     for index, row in df.iterrows():

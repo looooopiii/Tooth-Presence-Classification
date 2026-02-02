@@ -31,13 +31,13 @@ from torchvision.models import resnet18, resnet50
 
 # FUSION STRATEGY ENUM
 class FusionStrategy(Enum):
-    AVERAGE = "average"                    # average all angles
-    MAX_CONFIDENCE = "max_confidence"      # choose per-tooth best angle based on max confidence
-    BEST_ANGLE = "best_angle"              # choose single best angle based on overall confidence
-    BEST_N_ANGLES = "best_n_angles"        # choose best N angles and average (default 2)
-    MAJORITY_VOTE = "majority_vote"        # majority vote
-    WEIGHTED_AVERAGE = "weighted_average"  # confidence weighted average
-    JAW_CONFIDENCE = "jaw_confidence"      # choose based on jaw prediction confidence
+    AVERAGE = "average"
+    MAX_CONFIDENCE = "max_confidence"
+    BEST_ANGLE = "best_angle"
+    BEST_N_ANGLES = "best_n_angles"
+    MAJORITY_VOTE = "majority_vote"
+    WEIGHTED_AVERAGE = "weighted_average"
+    JAW_CONFIDENCE = "jaw_confidence"
 
 # CONFIGURATION
 TEST_IMG_DIR = "/home/user/lzhou/week15/render_output/test"
