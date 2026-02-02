@@ -851,7 +851,7 @@ def main():
 
     # Metrics
     if len(eval_rows) == 0:
-        raise RuntimeError("No evaluable cases. Check your CSV matching and image grouping.")
+        raise RuntimeError("No evaluable cases. Check CSV matching and image grouping.")
 
     # Jaw audit output
     print("DEBUG MODE: Full Audit for Jaw (lower=1)")
