@@ -104,7 +104,7 @@ def get_free_gpus(threshold_mb=1000, max_gpus=2):
 # Utilities
 def parse_args():
     p = argparse.ArgumentParser(
-        description="2D test with 24-angle selection using the SAME jaw-confidence strategy as 3D."
+        description="2D test with 24-angle selection."
     )
     p.add_argument("--img_dir", type=str, default=DEFAULT_IMG_DIR,
                    help="Directory containing rendered PNGs (24 per case).")
@@ -850,7 +850,7 @@ def main():
 
     # Metrics
     if len(eval_rows) == 0:
-        raise RuntimeError("No evaluable cases. Check your CSV matching and image grouping.")
+        raise RuntimeError("No evaluable cases. Check CSV matching and image grouping.")
 
     # Jaw audit output
     print("DEBUG MODE: Full Audit for Jaw (lower=1)")

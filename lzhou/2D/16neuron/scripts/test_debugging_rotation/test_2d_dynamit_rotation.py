@@ -29,7 +29,6 @@ try:
 except Exception as e:
     raise RuntimeError("This script requires torchvision. Please install torchvision.") from e
 
-
 # FDI ordering (jaw-specific 16)
 UPPER_FDI = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28]
 LOWER_FDI = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38]
@@ -37,8 +36,8 @@ LOWER_FDI = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38]
 # Default paths
 DEFAULT_IMG_DIR = "/home/user/lzhou/week16-17/output/test_render"
 DEFAULT_CSV_PATH = "/home/user/lzhou/week10/label_flipped.csv"
-DEFAULT_CHECKPOINT = "/home/user/lzhou/week16-17/output/Train_rotation/16plus1teeth/baseline_bce_best_2d_16plus1teeth.pth"
-DEFAULT_OUT_DIR = "/home/user/lzhou/week16-17/output/Test_rotation/16plus1teeth_auto_best"
+DEFAULT_CHECKPOINT = "/home/user/lzhou/week16-17/output/Train_rotation/16plus1teeth_dynamit/dynamit_best_2d_16plus1teeth.pth"
+DEFAULT_OUT_DIR = "/home/user/lzhou/week16-17/output/Test_rotation/16plus1teeth_dynamit_auto_best"
 DEFAULT_CACHE_IMAGES = True
 
 # GPU config
@@ -105,7 +104,7 @@ def get_free_gpus(threshold_mb=1000, max_gpus=2):
 # Utilities
 def parse_args():
     p = argparse.ArgumentParser(
-        description="2D test with 24-angle selection using the SAME jaw-confidence strategy as 3D."
+        description="2D test with 24-angle selection."
     )
     p.add_argument("--img_dir", type=str, default=DEFAULT_IMG_DIR,
                    help="Directory containing rendered PNGs (24 per case).")
@@ -117,9 +116,9 @@ def parse_args():
 
     # Model loading
     p.add_argument("--model_py", type=str,
-                   default="/home/user/lzhou/week16-17/scripts/New_test_Aug/score_one_image_16plus1.py",
+                   default="/home/user/lzhou/week16-17/scripts/Train_rotation/Baseline_16plus1_dynamit_2d.py",
                    help="Optional: python file containing model class (e.g., /path/model_def.py).")
-    p.add_argument("--model_class", type=str, default="ResNetMultiLabel16Plus1",
+    p.add_argument("--model_class", type=str, default="ResNet16Plus1",
                    help="Optional: class name to instantiate (e.g., MyNet). Requires --model_py.")
     p.add_argument("--state_key", type=str, default="model_state_dict",
                    help="Optional: key in checkpoint dict for state_dict (e.g., 'model_state_dict'). If None, auto-detect.")
@@ -209,6 +208,17 @@ def normalize_png_stem_to_newid(stem: str) -> str:
     return new_id.lower()
 
 
+def infer_is_lower_from_id(case_id: Optional[str]) -> Optional[int]:
+    if not case_id:
+        return None
+    s = str(case_id).strip().lower()
+    if "lower" in s:
+        return 1
+    if "upper" in s:
+        return 0
+    return None
+
+
 def normalize_jaw_value(v):
     """Return is_lower in {0,1} or None if cannot parse."""
     if v is None or (isinstance(v, float) and pd.isna(v)):
@@ -232,20 +242,9 @@ def normalize_jaw_value(v):
     return None
 
 
-def infer_is_lower_from_id(case_id: Optional[str]) -> Optional[int]:
-    if not case_id:
-        return None
-    s = str(case_id).strip().lower()
-    if "lower" in s:
-        return 1
-    if "upper" in s:
-        return 0
-    return None
-
-
 def infer_is_lower_like_3d(row: pd.Series) -> int:
     """
-    if any upper FDI columns exist AND are not NaN for upper, else lower.
+    If any upper FDI columns exist AND are not NaN for upper, else lower.
     """
     for t in UPPER_FDI:
         c = str(t)
@@ -341,7 +340,8 @@ def load_model(checkpoint_path: str, device: torch.device,
             model = ckpt
         else:
             raise ValueError(
-                "Checkpoint is not a torch.nn.Module."
+                "Checkpoint is not a torch.nn.Module. "
+                "Provide --model_py and --model_class to construct model and load state_dict."
             )
 
     model.to(device)
@@ -423,7 +423,7 @@ def compute_jaw_aware_tooth_report(rows: List[dict]) -> pd.DataFrame:
     """
     rows contains per-case:
       gt_is_lower, pred_is_lower, gt_teeth16 (len16), pred_teeth16 (len16)
-    For upper cases, tooth indices correspond to UPPER_FDI ordering. For lower cases correspond to LOWER_FDI.
+    For upper cases, tooth indices correspond to UPPER_FDI ordering; for lower cases correspond to LOWER_FDI.
     """
     # Collect per-FDI truth/pred
     per_tooth = {t: {"truth": [], "pred": []} for t in (UPPER_FDI + LOWER_FDI)}
@@ -850,7 +850,7 @@ def main():
 
     # Metrics
     if len(eval_rows) == 0:
-        raise RuntimeError("No evaluable cases. Check your CSV matching and image grouping.")
+        raise RuntimeError("No evaluable cases. Check CSV matching and image grouping.")
 
     # Jaw audit output
     print("DEBUG MODE: Full Audit for Jaw (lower=1)")

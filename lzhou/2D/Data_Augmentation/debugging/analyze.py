@@ -4,7 +4,6 @@ import numpy as np
 from pathlib import Path
 
 # CONFIGURATION
-# Path to the new CSV file you want to analyze
 RANDOM_AUGMENT_CSV = "/home/user/lzhou/week10/output/augment_random/train_labels_random.csv"
 
 # Label convention of the CSV
