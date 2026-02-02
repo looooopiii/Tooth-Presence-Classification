@@ -321,7 +321,6 @@ def _process_train_sample(args):
 
     for copy_num in range(1, COPIES_PER_SCAN + 1):
         # Sample number of teeth to remove based on weighted probabilities
-        # Favoring fewer teeth (2-3) with 70% probability, and 4-5 with 30% probability
         tooth_counts = list(TOOTH_COUNT_PROBS.keys())
         count_weights = list(TOOTH_COUNT_PROBS.values())
         num_to_remove = rng.choices(tooth_counts, weights=count_weights, k=1)[0]

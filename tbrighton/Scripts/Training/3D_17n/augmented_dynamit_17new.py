@@ -441,7 +441,7 @@ def print_final_report(model, loader, device):
     # Jaw Classification
     jaw_acc = accuracy_score(all_targets[:, 16], all_preds[:, 16])
 
-    print("\n" + "="*90); print("📊 DYNAMIT AUGMENTED OVERALL SUMMARY"); print("=" * 90)
+    print("\n" + "="*90); print("DYNAMIT AUGMENTED OVERALL SUMMARY"); print("=" * 90)
     print(f"Overall Macro F1:              {m_f1:.4f}")
     print(f"Macro Precision:               {m_prec:.4f}")
     print(f"Macro Recall:                  {m_rec:.4f}")

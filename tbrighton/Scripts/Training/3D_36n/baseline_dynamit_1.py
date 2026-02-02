@@ -310,10 +310,10 @@ def main():
     print("\n" + "=" * 80 + "\n[4.5/5] Calculating per-tooth metrics on best model...")
     per_tooth_metrics, macro_metrics = calculate_per_tooth_metrics(best_val_preds, best_val_targets, num_teeth=NUM_TEETH)
     
-    print("\n📊 MACRO-AVERAGED METRICS (across all 32 teeth):"); print("-" * 80)
+    print("\n MACRO-AVERAGED METRICS (across all 32 teeth):"); print("-" * 80)
     print(f"  Macro Precision: {macro_metrics['macro_precision']:.4f}\n  Macro Recall:    {macro_metrics['macro_recall']:.4f}\n  Macro F1:        {macro_metrics['macro_f1']:.4f}\n  Macro Accuracy:  {macro_metrics['macro_accuracy']:.4f}")
     
-    print("\n🦷 PER-TOOTH METRICS (FDI Notation):"); print("-" * 80)
+    print("\nPER-TOOTH METRICS (FDI Notation):"); print("-" * 80)
     print(f"{'FDI Tooth':<12} {'Precision':<12} {'Recall':<12} {'F1':<12} {'Accuracy':<12} {'Support':<10}")
     print("-" * 80)
     for fdi_label, metrics in per_tooth_metrics.items():

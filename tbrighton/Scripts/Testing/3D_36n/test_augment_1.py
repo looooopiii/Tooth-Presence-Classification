@@ -207,13 +207,13 @@ def print_sample_predictions(ids, preds, targets, num_samples):
         missed_missing_teeth = sorted(list(truth_missing.difference(pred_missing)))      # False Negatives
         wrongly_predicted_missing = sorted(list(pred_missing.difference(truth_missing))) # False Positives
         
-        print(f"\n📁 Case ID: {case_id}\n" + "-"*50)
+        print(f"\nCase ID: {case_id}\n" + "-"*50)
         print(f"  Ground Truth (Missing): {sorted(list(truth_missing)) if truth_missing else 'None'}")
         print(f"  Prediction (Missing):   {sorted(list(pred_missing)) if pred_missing else 'None'}")
         print("-"*50)
-        print(f"  ✅ Correctly Found (TP): {correctly_found_missing or 'None'}")
-        print(f"  ❌ Missed Teeth (FN):      {missed_missing_teeth or 'None'}")
-        print(f"  ⚠️ False Alarms (FP):      {wrongly_predicted_missing or 'None'}")
+        print(f"  Correctly Found (TP): {correctly_found_missing or 'None'}")
+        print(f"  Missed Teeth (FN):      {missed_missing_teeth or 'None'}")
+        print(f"  False Alarms (FP):      {wrongly_predicted_missing or 'None'}")
     print("\n" + "="*80)
 
 
@@ -268,10 +268,10 @@ def main():
     if list(state_dict.keys())[0].startswith('module.'):
         state_dict = {k[7:]: v for k, v in state_dict.items()}
     model.load_state_dict(state_dict)
-    print(f"✅ Model loaded from {MODEL_PATH}")
+    print(f" Model loaded from {MODEL_PATH}")
 
     labels_dict = load_test_labels(TEST_LABELS_CSV)
-    print(f"✅ Loaded labels for {len(labels_dict)} cases from {TEST_LABELS_CSV}")
+    print(f" Loaded labels for {len(labels_dict)} cases from {TEST_LABELS_CSV}")
     
     test_data = []
     for ply_file in sorted(Path(TEST_PLY_DIR).glob("*.ply")):
@@ -285,11 +285,11 @@ def main():
                 points = sample_points(points, NUM_POINTS)
                 test_data.append((case_id, points, labels_dict[case_id]))
     
-    print(f"✅ Prepared {len(test_data)} matching samples for testing.")
-    if not test_data: print("❌ No matching samples found. Exiting."); return
+    print(f"Prepared {len(test_data)} matching samples for testing.")
+    if not test_data: print(" No matching samples found. Exiting."); return
 
     preds, targets, ids = test_model(model, test_data, device)
-    print(f"✅ Inference complete on {len(ids)} samples.")
+    print(f"Inference complete on {len(ids)} samples.")
     
     metrics = calculate_metrics(preds, targets)
     print_metrics_summary(metrics)
@@ -311,7 +311,7 @@ def main():
     with open(Path(OUTPUT_DIR) / 'test_metrics_dynamit.json', 'w') as f:
         json.dump(metrics, f, indent=4)
         
-    print(f"\n📊 Full results and metrics saved successfully to {OUTPUT_DIR}")
+    print(f"\nFull results and metrics saved successfully to {OUTPUT_DIR}")
 
 if __name__ == "__main__":
     main()

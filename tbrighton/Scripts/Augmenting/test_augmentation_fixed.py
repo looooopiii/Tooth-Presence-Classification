@@ -418,9 +418,6 @@ def _process_test_row(args):
         all_train_tooth_labels = get_label_cache(train_json_path)
         teeth_present_in_train = set(all_train_tooth_labels.keys())
 
-        # FIXED: Strictly follow CSV labels - only remove teeth that are both:
-        # 1. Marked as missing in the CSV
-        # 2. Present in the training sample
         teeth_to_remove = target_missing_teeth.intersection(teeth_present_in_train)
 
         if not teeth_to_remove:

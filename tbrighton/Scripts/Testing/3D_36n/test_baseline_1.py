@@ -114,7 +114,7 @@ def load_ply_file(ply_path):
         mesh = trimesh.load(ply_path, process=False)
         return np.array(mesh.vertices, dtype=np.float32)
     except Exception as e:
-        print(f"❌ Error loading {ply_path}: {e}")
+        print(f" Error loading {ply_path}: {e}")
         return np.array([], dtype=np.float32)
 
 def normalize_point_cloud(points):
@@ -207,14 +207,14 @@ def print_metrics_summary(metrics):
     """Prints a formatted summary of all test metrics."""
     print("\n" + "="*80 + "\n" + " "*25 + "TESTING METRICS SUMMARY" + "\n" + "="*80)
     micro = metrics['overall_micro']
-    print("\n📊 OVERALL (MICRO-AVERAGE) METRICS (Positive class: Missing Tooth):")
+    print("\nOVERALL (MICRO-AVERAGE) METRICS (Positive class: Missing Tooth):")
     print(f"  - Precision: {micro['precision']:.4f}\n  - Recall:    {micro['recall']:.4f}\n  - F1 Score:  {micro['f1']:.4f}\n  - Accuracy:  {micro['accuracy']:.4f}")
     
     macro = metrics['overall_macro']
-    print("\n📈 OVERALL (MACRO-AVERAGE) METRICS:")
+    print("\nOVERALL (MACRO-AVERAGE) METRICS:")
     print(f"  - Macro Precision: {macro['macro_precision']:.4f}\n  - Macro Recall:    {macro['macro_recall']:.4f}\n  - Macro F1 Score:  {macro['macro_f1']:.4f}\n  - Macro Accuracy:  {macro['macro_accuracy']:.4f}")
     
-    print("\n🦷 PER-TOOTH METRICS (FDI Notation):")
+    print("\n PER-TOOTH METRICS (FDI Notation):")
     print("-" * 80)
     print(f"{'FDI Tooth':<12} {'Precision':<12} {'Recall':<12} {'F1':<12} {'Accuracy':<12} {'Support':<10}")
     print("-" * 80)
@@ -241,13 +241,13 @@ def print_sample_predictions(ids, preds, targets, num_samples):
         missed_missing_teeth = sorted(list(truth_missing.difference(pred_missing)))  # False Negatives
         wrongly_predicted_missing = sorted(list(pred_missing.difference(truth_missing))) # False Positives
         
-        print(f"\n📁 Case ID: {case_id}\n" + "-"*50)
+        print(f"\n Case ID: {case_id}\n" + "-"*50)
         print(f"  Ground Truth (Missing): {sorted(list(truth_missing)) if truth_missing else 'None'}")
         print(f"  Prediction (Missing):   {sorted(list(pred_missing)) if pred_missing else 'None'}")
         print("-"*50)
-        print(f"  ✅ Correctly Found (TP): {correctly_found_missing or 'None'}")
-        print(f"  ❌ Missed Teeth (FN):      {missed_missing_teeth or 'None'}")
-        print(f"  ⚠️ False Alarms (FP):      {wrongly_predicted_missing or 'None'}")
+        print(f"  Correctly Found (TP): {correctly_found_missing or 'None'}")
+        print(f"  Missed Teeth (FN):      {missed_missing_teeth or 'None'}")
+        print(f"  False Alarms (FP):      {wrongly_predicted_missing or 'None'}")
     print("\n" + "="*80)
 
 def generate_test_plots(metrics, preds, targets, save_dir):
@@ -306,10 +306,10 @@ def main():
     if list(state_dict.keys())[0].startswith('module.'):
         state_dict = {k[7:]: v for k, v in state_dict.items()}
     model.load_state_dict(state_dict)
-    print(f"✅ Model loaded from {MODEL_PATH}")
+    print(f" Model loaded from {MODEL_PATH}")
 
     labels_dict = load_test_labels(TEST_LABELS_CSV)
-    print(f"✅ Loaded labels for {len(labels_dict)} cases from {TEST_LABELS_CSV}")
+    print(f" Loaded labels for {len(labels_dict)} cases from {TEST_LABELS_CSV}")
     
     test_data = []
     ply_files = sorted(Path(TEST_PLY_DIR).glob("*.ply"))
@@ -329,11 +329,11 @@ def main():
                 labels = labels_dict[case_id]
                 test_data.append((case_id, points, labels))
     
-    print(f"✅ Prepared {len(test_data)} matching samples for testing.")
-    if not test_data: print("❌ No matching samples found. Exiting."); return
+    print(f" Prepared {len(test_data)} matching samples for testing.")
+    if not test_data: print(" No matching samples found. Exiting."); return
 
     preds, targets, ids = test_model(model, test_data, device)
-    print(f"✅ Inference complete on {len(ids)} samples.")
+    print(f" Inference complete on {len(ids)} samples.")
     
     metrics = calculate_metrics(preds, targets)
     print_metrics_summary(metrics)
@@ -353,7 +353,7 @@ def main():
     with open(Path(OUTPUT_DIR) / 'test_metrics.json', 'w') as f:
         json.dump(metrics, f, indent=4)
         
-    print(f"\n📊 Full results and metrics saved successfully to {OUTPUT_DIR}")
+    print(f"\n Full results and metrics saved successfully to {OUTPUT_DIR}")
 
 if __name__ == "__main__":
     main()

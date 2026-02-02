@@ -368,7 +368,7 @@ def print_final_report(model, loader, device):
     m_acc = np.mean(valid_accs) if valid_accs else 0.0
     jaw_acc = accuracy_score(all_targets[:, 16], all_preds[:, 16])
 
-    print("\n" + "="*90); print("📊 OVERALL SUMMARY (Calculated only on teeth with Support > 0)"); print("=" * 90)
+    print("\n" + "="*90); print(" OVERALL SUMMARY (Calculated only on teeth with Support > 0)"); print("=" * 90)
     print(f"Overall Precision:     {m_prec:.4f}")
     print(f"Overall Recall:        {m_rec:.4f}")
     print(f"Overall F1 Score:      {m_f1:.4f}")

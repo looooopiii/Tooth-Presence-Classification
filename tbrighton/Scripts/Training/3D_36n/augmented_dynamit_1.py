@@ -252,8 +252,8 @@ def main():
         model_to_save=model.module if hasattr(model,'module') else model; torch.save({'epoch':epoch,'model_state_dict':model_to_save.state_dict()},OUTPUT_DIR/LAST_MODEL_FILENAME)
         if val_metrics['f1']>best_f1: best_f1=val_metrics['f1']; bvp,bvt=val_preds,val_targets; torch.save({'epoch':epoch,'model_state_dict':model_to_save.state_dict()},OUTPUT_DIR/BEST_MODEL_FILENAME); print(f"  → ✓ Best F1 model saved (F1: {val_metrics['f1']:.4f})")
     print("\n"+"="*80+f"\n[4/5] Training complete! Best F1: {best_f1:.4f}"); print("\n[4.5/5] Calculating metrics..."); ptm,mm=calculate_per_tooth_metrics(bvp,bvt)
-    print("\n📊 MACRO-AVERAGED METRICS:");print("-" * 80);print(f"  Macro Precision: {mm['macro_precision']:.4f}\n  Macro Recall:    {mm['macro_recall']:.4f}\n  Macro F1:        {mm['macro_f1']:.4f}\n  Macro Accuracy:  {mm['macro_accuracy']:.4f}")
-    print("\n🦷 PER-TOOTH METRICS:");print("-" * 80);print(f"{'FDI':<10}{'Precision':<12}{'Recall':<12}{'F1':<12}{'Accuracy':<12}{'Support':<10}");print("-" * 80)
+    print("\n MACRO-AVERAGED METRICS:");print("-" * 80);print(f"  Macro Precision: {mm['macro_precision']:.4f}\n  Macro Recall:    {mm['macro_recall']:.4f}\n  Macro F1:        {mm['macro_f1']:.4f}\n  Macro Accuracy:  {mm['macro_accuracy']:.4f}")
+    print("\n PER-TOOTH METRICS:");print("-" * 80);print(f"{'FDI':<10}{'Precision':<12}{'Recall':<12}{'F1':<12}{'Accuracy':<12}{'Support':<10}");print("-" * 80)
     for fdi,mets in ptm.items(): print(f"  {fdi:<8} {mets['precision']:>10.4f}  {mets['recall']:>10.4f}  {mets['f1']:>10.4f}  {mets['accuracy']:>10.4f}  {mets['support']:>8}")
     mf=OUTPUT_DIR/METRICS_FILENAME; 
     with open(mf,'w') as f: json.dump({'macro_metrics':mm,'per_tooth_metrics':{str(k):v for k,v in ptm.items()}},f,indent=2); print(f"\n✓ Metrics saved: {mf}")

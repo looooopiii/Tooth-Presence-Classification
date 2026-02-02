@@ -1,15 +1,7 @@
 """
-Replicate Blender's Orientation Pipeline
------------------------------------------
-This replicates the exact alignment used in your Blender rendering script:
-1. orient_top_view: Rotate smallest dimension to Z
-2. upright_with_pca: PCA alignment (longest→X/Y, shortest→Z)
-3. auto_flip: Ensure normals point up
-
-This alignment is VALID because:
-- It's the preprocessing applied to generate your test data
-- Same transformation should be applied during inference
-- Represents canonical anatomical orientation
+orient_top_view: Rotate smallest dimension to Z
+upright_with_pca: PCA alignment (longest→X/Y, shortest→Z)
+auto_flip: Ensure normals point up
 """
 
 import numpy as np
@@ -18,8 +10,7 @@ from sklearn.decomposition import PCA
 
 def orient_top_view(points):
     """
-    Step 1: Rotate smallest dimension to Z-axis
-    Replicates Blender's orient_top_view()
+   Rotate smallest dimension to Z-axis
     """
     # Calculate bounding box dimensions
     min_coords = np.min(points, axis=0)
@@ -42,13 +33,7 @@ def orient_top_view(points):
 
 def upright_with_pca(points):
     """
-    Step 2: PCA-based upright orientation
-    Replicates Blender's upright_with_pca()
-    
-    Aligns:
-    - Longest variance axis → X or Y (dental arch)
-    - Medium variance axis → Y or X
-    - Shortest variance axis → Z (tooth height)
+ PCA-based upright orientation
     """
     if len(points) < 8:
         return points
@@ -103,13 +88,8 @@ def upright_with_pca(points):
     return points_aligned
 
 def auto_flip_for_top_view(points):
-    """
-    Step 3: Ensure top surface normals point upward
-    Simplified version of Blender's auto_flip_for_top_view()
-    
-    Strategy:
-    - If most points in top region have negative Z, flip around X
-    """
+    """Ensure top surface normals point upward"""
+   
     # Rotate Y>X if needed (arch orientation)
     min_coords = np.min(points, axis=0)
     max_coords = np.max(points, axis=0)
@@ -138,16 +118,7 @@ def auto_flip_for_top_view(points):
     return points
 
 def blender_alignment_pipeline(points):
-    """
-    Complete Blender alignment pipeline
-    
-    This replicates the exact preprocessing from your Blender script:
-    - orient_top_view: Smallest dim → Z
-    - upright_with_pca: PCA alignment
-    - auto_flip: Ensure correct orientation
-    
-    Returns:
-        points_aligned: Aligned point cloud
+    """ points_aligned: Aligned point cloud
         total_rotation: Combined rotation matrix (for reference)
     """
     # Store original for calculating total rotation
@@ -190,18 +161,6 @@ def sample_points(points, num_points=4096):
 def preprocess_test_data(points, num_points=4096):
     """
     Complete preprocessing pipeline for test data
-    Matches both Blender rendering AND training preprocessing
-    
-    Pipeline:
-    1. Blender alignment (orient_top_view + PCA + flip)
-    2. Normalize to unit sphere
-    3. Sample points
-    
-    Args:
-        points: Raw point cloud [N, 3]
-        num_points: Number of points to sample
-        
-    Returns:
         points_preprocessed: Ready for model inference [num_points, 3]
     """
     # Step 1: Apply Blender's alignment pipeline
@@ -220,33 +179,6 @@ def preprocess_test_data(points, num_points=4096):
 # EXAMPLE USAGE IN YOUR TEST SCRIPT
 # =================================================================================
 
-"""
-# In your main test loop, replace the preprocessing with:
-
-for case_id in tqdm(valid_case_ids, desc="Testing"):
-    ply_path = files_on_disk[case_id]
-    row = df_indexed.loc[case_id]
-    
-    # Load raw PLY
-    points = load_ply_file(ply_path)
-    if len(points) < 100:
-        continue
-    
-    # Apply BLENDER ALIGNMENT + NORMALIZATION + SAMPLING
-    points_preprocessed = preprocess_test_data(points, num_points=NUM_POINTS)
-    
-    # Inference
-    points_tensor = torch.from_numpy(points_preprocessed).unsqueeze(0).float().to(device)
-    
-    with torch.no_grad():
-        logits = model(points_tensor)
-        probs = torch.sigmoid(logits).cpu().numpy()[0]
-    
-    pred_jaw = 1 if probs[16] > THRESHOLD else 0
-    pred_teeth = (probs[:16] > THRESHOLD).astype(int)
-    
-    # ... rest of your code
-"""
 
 # =================================================================================
 # VERIFICATION: Check if alignment matches Blender
@@ -255,11 +187,6 @@ for case_id in tqdm(valid_case_ids, desc="Testing"):
 def verify_alignment(points_before, points_after):
     """
     Verify that alignment worked correctly
-    
-    Expected results after Blender alignment:
-    - Z-axis should be shortest dimension (tooth height)
-    - X-axis or Y-axis should be longest (dental arch)
-    - Points should be roughly centered
     """
     # Check dimensions
     min_coords = np.min(points_after, axis=0)

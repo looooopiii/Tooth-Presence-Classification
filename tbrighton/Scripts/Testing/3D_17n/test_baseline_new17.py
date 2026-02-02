@@ -233,7 +233,7 @@ def calculate_and_print_metrics(all_data):
     jaw_acc = accuracy_score(jaw_true_list, jaw_pred_list)
 
     print("\n" + "="*90)
-    print("📊 OVERALL SUMMARY")
+    print("OVERALL SUMMARY")
     print("=" * 90)
     print(f"Overall Macro F1:              {m_f1:.4f}")
     print(f"Macro Precision:               {m_prec:.4f}")
@@ -260,7 +260,7 @@ def calculate_and_print_metrics(all_data):
 
 def main():
     print("="*90)
-    print(f"🧪 TESTING WITH FIXED ROTATION: {BEST_ROT}")
+    print(f"TESTING BASELINE MODEL")
     print("="*90)
     print(f"Device: {DEVICE}")
     print(f"Model Path: {MODEL_PATH}")

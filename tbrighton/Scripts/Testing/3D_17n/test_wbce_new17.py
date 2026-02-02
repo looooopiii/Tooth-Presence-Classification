@@ -265,7 +265,7 @@ def calculate_and_print_metrics(all_data):
 
 def main():
     print("="*90)
-    print(f"🧪 TESTING WEIGHTED BCE MODEL WITH FIXED ROTATION: {BEST_ROT}")
+    print(f" TESTING WEIGHTED BCE MODEL: {BEST_ROT}")
     print("="*90)
     print(f"Device: {DEVICE}")
     print(f"Model Path: {MODEL_PATH}")

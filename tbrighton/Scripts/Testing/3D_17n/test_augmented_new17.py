@@ -173,7 +173,7 @@ def plot_confusion_matrices(y_true, y_pred, save_path, title_suffix="Teeth"):
 
 def calculate_and_print_metrics(all_data):
     print("\n" + "="*90)
-    print("🦷 PER-TOOTH METRICS (JAW-AWARE, Support > 0)")
+    print("PER-TOOTH METRICS (JAW-AWARE, Support > 0)")
     print("-" * 90)
     print(f"{'FDI':<6} {'Prec':<10} {'Recall':<10} {'F1':<10} {'Acc':<10} {'Supp':<6} {'TP':<5} {'FP':<5} {'FN':<5} {'TN':<5}")
     print("-" * 90)
@@ -238,7 +238,7 @@ def calculate_and_print_metrics(all_data):
     jaw_acc = accuracy_score(jaw_true_list, jaw_pred_list)
 
     print("\n" + "="*90)
-    print("📊 AUGMENTED DYNAMIT OVERALL SUMMARY")
+    print(" AUGMENTED DYNAMIT OVERALL SUMMARY")
     print("=" * 90)
     print(f"Overall Macro F1:              {m_f1:.4f}")
     print(f"Macro Precision:               {m_prec:.4f}")
@@ -265,7 +265,7 @@ def calculate_and_print_metrics(all_data):
 
 def main():
     print("="*90)
-    print(f"🧪 TESTING AUGMENTED DYNAMIT MODEL WITH FIXED ROTATION: {BEST_ROT}")
+    print(f" TESTING AUGMENTED DYNAMIT MODEL ")
     print("="*90)
     print(f"Device: {DEVICE}")
     print(f"Model Path: {MODEL_PATH}")
