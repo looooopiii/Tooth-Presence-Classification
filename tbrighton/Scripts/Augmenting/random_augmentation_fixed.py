@@ -16,7 +16,6 @@ ORIGINAL_TRAIN_DATA_PATHS = [
 ]
 OUTPUT_DIR = Path("/home/user/tbrighton/blender_outputs/augment_random_fixed")
 
-FILL_BASE = True
 BASE_COLOR = (0.85, 0.70, 0.70)
 RANDOM_SEED = 42
 COPIES_PER_SCAN = 2
@@ -35,6 +34,14 @@ TEETH_REMOVAL_PROBS = {
 }
 # Tier 3: All other teeth get this high base probability
 BASE_PROB = 0.30
+
+# Probability distribution for number of teeth to remove (2-5)
+TOOTH_COUNT_PROBS = {
+    2: 0.35,  
+    3: 0.35,  
+    4: 0.20,  
+    5: 0.10   
+}
 
 # FDI Tooth Notation
 UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
@@ -89,90 +96,6 @@ def _read_obj_cached(obj_path):
         'face_lines': face_lines,
         'other_lines': other_lines,
     }
-
-def _order_loop(adj, start):
-    """
-    Given an undirected adjacency mapping {v: set(neighbors)} for a single loop,
-    return an ordered list of vertices following the boundary.
-    """
-    loop = [start]
-    prev = None
-    cur = start
-    while True:
-        nbrs = adj.get(cur, set()) - ({prev} if prev is not None else set())
-        if not nbrs:
-            break
-        nxt = next(iter(nbrs))
-        if nxt == start:
-            break
-        loop.append(nxt)
-        prev, cur = cur, nxt
-        if len(loop) > 200000:  # safety guard
-            break
-    return loop
-
-def extract_boundary_loops(vertices_to_remove, face_lines):
-    """
-    Build ordered boundary loops (each loop is a list of kept-vertex indices)
-    around regions that will be removed. We collect edges from faces that mix
-    removed and kept vertices, then split them into connected components and
-    order each component along the loop.
-    """
-    # Parse faces into lists of vertex indices (tolerate v/vt/vn tokens)
-    faces = []
-    for fl in face_lines:
-        parts = fl.strip().split()[1:]
-        if not parts:
-            continue
-        vids = []
-        for p in parts:
-            base = p.split('/')[0]
-            if base.lstrip('-').isdigit():
-                vids.append(int(base))
-        if len(vids) >= 2:
-            faces.append(vids)
-
-    kept_kept_edges = []  # boundary candidate edges (both endpoints kept) from mixed faces
-    for vids in faces:
-        has_removed = any(v in vertices_to_remove for v in vids)
-        has_kept = any(v not in vertices_to_remove for v in vids)
-        if not (has_removed and has_kept):
-            continue
-        n = len(vids)
-        for i in range(n):
-            a, b = vids[i], vids[(i + 1) % n]
-            if (a not in vertices_to_remove) and (b not in vertices_to_remove):
-                kept_kept_edges.append((a, b))
-
-    # Build undirected adjacency of boundary graph
-    adj = {}
-    for a, b in kept_kept_edges:
-        adj.setdefault(a, set()).add(b)
-        adj.setdefault(b, set()).add(a)
-
-    # Extract connected components and order them as loops
-    visited = set()
-    loops = []
-    for v in list(adj.keys()):
-        if v in visited:
-            continue
-        # BFS to get component
-        stack = [v]
-        comp = set()
-        while stack:
-            x = stack.pop()
-            if x in visited:
-                continue
-            visited.add(x)
-            comp.add(x)
-            stack.extend(list(adj.get(x, [])))
-        # Order this component as a loop by walking degree-2 chain
-        start = next(iter(comp))
-        sub_adj = {k: (adj.get(k, set()) & comp) for k in comp}
-        ordered = _order_loop(sub_adj, start)
-        if len(ordered) >= 3:
-            loops.append(ordered)
-    return loops
 
 def _parse_face_verts(face_line: str):
     """Parse an OBJ face line 'f v[/vt[/vn]] ...' -> list of vertex ids (int)."""
@@ -303,15 +226,6 @@ def _component_reference_normal(comp_edges, edge_normals, comp_vertices, coord_l
         ref = np.array([0.0, 0.0, 1.0], dtype=np.float64)
     return ref
 
-def _centroid_of_vertices(old_ids, coord_lut):
-    pts = [coord_lut[v] for v in old_ids if v in coord_lut]
-    if len(pts) == 0:
-        return None
-    import numpy as _np
-    arr = _np.asarray(pts, dtype=_np.float64)
-    c = arr.mean(axis=0)
-    return c
-
 def remove_teeth_from_obj(input_obj, output_obj, teeth_to_remove, all_train_tooth_labels, obj_cache=None):
     """Removes specified teeth from an OBJ file and fills the resulting hole."""
     output_obj = Path(output_obj)
@@ -397,6 +311,7 @@ def _process_train_sample(args):
     if not possible_to_remove:
         return []
 
+    # Get tooth removal weights
     weights = [TEETH_REMOVAL_PROBS.get(tooth, BASE_PROB) for tooth in possible_to_remove]
     rng = random.Random(RANDOM_SEED + sample_idx)
 
@@ -405,8 +320,24 @@ def _process_train_sample(args):
     output_subdir.mkdir(parents=True, exist_ok=True)
 
     for copy_num in range(1, COPIES_PER_SCAN + 1):
-        num_to_remove = rng.randint(2, min(5, len(possible_to_remove)))
-        selected_for_removal = set(rng.choices(possible_to_remove, weights=weights, k=num_to_remove))
+        # Sample number of teeth to remove based on weighted probabilities
+        # Favoring fewer teeth (2-3) with 70% probability, and 4-5 with 30% probability
+        tooth_counts = list(TOOTH_COUNT_PROBS.keys())
+        count_weights = list(TOOTH_COUNT_PROBS.values())
+        num_to_remove = rng.choices(tooth_counts, weights=count_weights, k=1)[0]
+        
+        # Ensure we don't try to remove more teeth than available
+        num_to_remove = min(num_to_remove, len(possible_to_remove))
+        
+        # Sample teeth with replacement prevention
+        selected_for_removal = set()
+        attempts = 0
+        max_attempts = 100
+        while len(selected_for_removal) < num_to_remove and attempts < max_attempts:
+            tooth = rng.choices(possible_to_remove, weights=weights, k=1)[0]
+            selected_for_removal.add(tooth)
+            attempts += 1
+        
         if not selected_for_removal:
             continue
         teeth_present_after = teeth_present_in_train - selected_for_removal
@@ -455,6 +386,7 @@ def main():
     total_tasks = len(all_original_scans) * COPIES_PER_SCAN
     
     print(f"[2/3] Starting random augmentation for {total_tasks} new scans...")
+    print(f"  Tooth count distribution: 2({TOOTH_COUNT_PROBS[2]*100:.0f}%), 3({TOOTH_COUNT_PROBS[3]*100:.0f}%), 4({TOOTH_COUNT_PROBS[4]*100:.0f}%), 5({TOOTH_COUNT_PROBS[5]*100:.0f}%)")
     tasks = [(sample, idx) for idx, sample in enumerate(all_original_scans)]
     with tqdm(total=total_tasks, desc="Augmenting") as pbar:
         if WORKERS <= 1:

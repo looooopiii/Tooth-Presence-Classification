@@ -17,30 +17,13 @@ TRAIN_DATA_PATHS = [
 ]
 OUTPUT_DIR = Path("/home/user/tbrighton/blender_outputs/augment_test_fixed")
 
-FILL_BASE = True
-BASE_COLOR = (0.85, 0.70, 0.70)
 RANDOM_SEED = 43
 NUM_COPIES = 5
 CPU_COUNT = os.cpu_count() or 1
 DEFAULT_WORKERS = max(1, CPU_COUNT - 1)
 WORKERS = int(os.getenv("AUG_WORKERS", str(DEFAULT_WORKERS)))
 WORKERS = max(1, WORKERS)
-USE_TORCH = True
-TORCH_DEVICE = os.getenv("AUG_DEVICE", "cuda")
 
-AUGMENT_MODE = "balanced" 
-REMOVE_K_RANGE = (2, 5)     
-
-REMOVAL_WEIGHTS = {
-    # Upper jaw
-    18: 0.2, 17: 0.6, 16: 0.8, 15: 1.0, 14: 1.0, 13: 1.2, 12: 1.2, 11: 1.2,
-    21: 1.2, 22: 1.2, 23: 1.2, 24: 1.0, 25: 1.0, 26: 0.8, 27: 0.6, 28: 0.2,
-    # Lower jaw
-    48: 0.2, 47: 0.6, 46: 0.8, 45: 1.0, 44: 1.0, 43: 1.2, 42: 1.2, 41: 1.2,
-    31: 1.2, 32: 1.2, 33: 1.2, 34: 1.0, 35: 1.0, 36: 0.8, 37: 0.6, 38: 0.2,
-}
-# Limit fraction of wisdom teeth in a removal set (encourages non‑wisdom deletions)
-MAX_WISDOM_IN_SET = 1      
 FLIPPED_LABELS_IN_CSV = True
 
 UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
@@ -103,35 +86,6 @@ def _init_worker(train_samples):
     global _TRAIN_SAMPLES
     _TRAIN_SAMPLES = train_samples
 
-
-# --- Balanced sampling utility ---
-def _sample_teeth_balanced(candidates, k):
-    """Sample k unique teeth from candidates with weights in REMOVAL_WEIGHTS.
-    Enforce at most MAX_WISDOM_IN_SET wisdom teeth if possible.
-    """
-    if not candidates:
-        return set()
-    k = max(0, min(k, len(candidates)))
-    # Build weight vector
-    weights = np.array([REMOVAL_WEIGHTS.get(t, 1.0) for t in candidates], dtype=np.float64)
-    if weights.sum() == 0:
-        weights = np.ones_like(weights)
-    probs = weights / weights.sum()
-    # initial sample
-    chosen = list(np.random.choice(candidates, size=k, replace=False, p=probs))
-    # enforce wisdom constraint
-    wisdom_set = {18, 28, 38, 48}
-    if MAX_WISDOM_IN_SET is not None and MAX_WISDOM_IN_SET >= 0:
-        wisdom_in_chosen = [t for t in chosen if t in wisdom_set]
-        if len(wisdom_in_chosen) > MAX_WISDOM_IN_SET:
-            # replace extras with non-wisdom teeth if available
-            keep = set(chosen) - set(wisdom_in_chosen[MAX_WISDOM_IN_SET:])
-            pool = [t for t in candidates if (t not in keep) and (t not in wisdom_set)]
-            need = k - len(keep)
-            if need > 0 and len(pool) >= need:
-                add = list(np.random.choice(pool, size=need, replace=False))
-                chosen = list(keep) + add
-    return set(chosen)
 
 # --- Robust boundary detection and ordering (edge kept/removed counts) ---
 def _parse_face_verts(face_line: str):
@@ -433,8 +387,8 @@ def _process_test_row(args):
         return []
 
     rng = random.Random(RANDOM_SEED + row_idx)
-    np.random.seed(RANDOM_SEED + row_idx)
 
+    # Extract teeth marked as missing from CSV
     target_missing_teeth = {
         int(col) for col, val in test_row.items()
         if str(col).isdigit() and val == value_for_missing
@@ -464,12 +418,10 @@ def _process_test_row(args):
         all_train_tooth_labels = get_label_cache(train_json_path)
         teeth_present_in_train = set(all_train_tooth_labels.keys())
 
-        if AUGMENT_MODE == "match_test":
-            teeth_to_remove = target_missing_teeth.intersection(teeth_present_in_train)
-        else:
-            k_remove = rng.randint(REMOVE_K_RANGE[0], REMOVE_K_RANGE[1])
-            cand = sorted(teeth_present_in_train)
-            teeth_to_remove = _sample_teeth_balanced(cand, k_remove)
+        # FIXED: Strictly follow CSV labels - only remove teeth that are both:
+        # 1. Marked as missing in the CSV
+        # 2. Present in the training sample
+        teeth_to_remove = target_missing_teeth.intersection(teeth_present_in_train)
 
         if not teeth_to_remove:
             continue
